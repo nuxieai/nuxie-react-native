@@ -1,0 +1,22 @@
+env:
+  CI: "1"
+
+steps:
+  - label: ":react: React Native SDK and Expo example"
+    command: |
+      set -euo pipefail
+      bun install
+      bun run typecheck
+      bun test
+      bun run build
+      cd example
+      bun install --frozen-lockfile
+      bun run verify
+    agents:
+      queue: nuxie-pr
+      nuxie-platform: linux
+    timeout_in_minutes: 60
+    retry:
+      automatic:
+        - exit_status: -1
+          limit: 1
