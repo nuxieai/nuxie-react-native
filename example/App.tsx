@@ -1,21 +1,24 @@
 import { StatusBar } from "expo-status-bar";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Button, Platform, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   NuxieProvider,
   useFeature,
   useNuxieClient,
   useNuxieEvents,
-  useTrigger,
+  type NuxieConfigureOptions,
   type NuxiePurchaseController,
 } from "@nuxie/react-native";
 
+const nuxieConfiguration: NuxieConfigureOptions = {
+  environment: "development",
+  logLevel: "debug",
+  usePurchaseController: true,
+};
+
 const purchaseController: NuxiePurchaseController = {
-  async onPurchase(request) {
-    return {
-      type: "cancelled",
-      productId: request.productId,
-    };
+  async onPurchase() {
+    return { type: "cancelled" };
   },
   async onRestore() {
     return { type: "no_purchases" };
@@ -24,46 +27,34 @@ const purchaseController: NuxiePurchaseController = {
 
 function DemoScreen() {
   const client = useNuxieClient();
-  const trigger = useTrigger();
-  const feature = useFeature("pro_export", { refreshOnMount: true });
-
+  const feature = useFeature("pro_export", { policy: "cacheFirst" });
   const [identity, setIdentity] = useState("(unknown)");
   const [logs, setLogs] = useState<string[]>([]);
 
   const appendLog = (message: string) => {
-    setLogs((prev) => {
-      const next = [`${new Date().toISOString()} ${message}`, ...prev];
-      return next.slice(0, 20);
-    });
+    setLogs((previous) => [
+      `${new Date().toISOString()} ${message}`,
+      ...previous,
+    ].slice(0, 20));
   };
 
   useNuxieEvents({
-    onTriggerUpdate(payload) {
-      appendLog(`trigger ${payload.requestId}: ${payload.update.kind}`);
+    onActivity(activity) {
+      appendLog(`activity ${activity.name}`);
     },
-    onFeatureAccessChanged(payload) {
-      appendLog(`feature ${payload.featureId}: allowed=${payload.to.allowed}`);
+    onAppAction(action) {
+      appendLog(`app action ${action.name}`);
     },
-    onPurchaseRequest(payload) {
-      appendLog(`purchase request ${payload.requestId} for ${payload.productId}`);
+    onFeatureAccessChanged(event) {
+      appendLog(`feature ${event.featureId}: allowed=${event.to.allowed}`);
     },
-    onRestoreRequest(payload) {
-      appendLog(`restore request ${payload.requestId}`);
+    onPurchaseRequest(request) {
+      appendLog(`purchase ${request.request_id} for ${request.product_id}`);
     },
-    onFlowPresented(payload) {
-      appendLog(`flow presented ${payload.flowId}`);
-    },
-    onFlowDismissed(payload) {
-      appendLog(`flow dismissed ${payload.flowId ?? "unknown"} reason=${payload.reason ?? "none"}`);
+    onRestoreRequest(request) {
+      appendLog(`restore ${request.request_id}`);
     },
   });
-
-  const triggerSummary = useMemo(() => {
-    if (trigger.terminalUpdate == null) {
-      return "(none)";
-    }
-    return JSON.stringify(trigger.terminalUpdate);
-  }, [trigger.terminalUpdate]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -76,8 +67,6 @@ function DemoScreen() {
         <Text>Feature allowed: {String(feature.value?.allowed ?? false)}</Text>
         <Text>Feature balance: {String(feature.value?.balance ?? "n/a")}</Text>
         <Text>Identity: {identity}</Text>
-        <Text>Trigger running: {String(trigger.isRunning)}</Text>
-        <Text>Trigger terminal: {triggerSummary}</Text>
 
         <View style={styles.buttons}>
           <Button
@@ -94,34 +83,30 @@ function DemoScreen() {
             }}
           />
           <Button
-            title="Run Trigger"
+            title="Capture Event"
             onPress={() => {
-              void trigger
-                .run("paywall_opened", {
-                  properties: { source: "example_button" },
-                })
-                .then((terminal) => appendLog(`trigger done ${terminal.kind}`))
-                .catch((error) => appendLog(`trigger failed: ${String(error)}`));
+              client.trigger("paywall_opened", { source: "example_button" });
+              appendLog("event captured");
             }}
           />
           <Button
-            title="Check Feature"
+            title="Refresh Feature"
             onPress={() => {
               void feature.refresh().then(() => appendLog("feature refreshed"));
             }}
           />
           <Button
-            title="Show Flow"
+            title="Dismiss Experience"
             onPress={() => {
-              void client.showFlow("example_flow").catch((error) => appendLog(`showFlow failed: ${String(error)}`));
+              void client.dismiss().catch((error) => appendLog(`dismiss failed: ${String(error)}`));
             }}
           />
         </View>
 
-        <Text style={styles.subtitle}>Recent Events</Text>
-        {logs.length === 0 ? <Text>(no events yet)</Text> : null}
-        {logs.map((line, idx) => (
-          <Text key={`${line}-${idx}`} style={styles.logLine}>
+        <Text style={styles.subtitle}>Recent native activity</Text>
+        {logs.length === 0 ? <Text>(no activity yet)</Text> : null}
+        {logs.map((line, index) => (
+          <Text key={`${line}-${index}`} style={styles.logLine}>
             {line}
           </Text>
         ))}
@@ -135,15 +120,10 @@ export default function App() {
 
   return (
     <NuxieProvider
-      config={{
-        environment: "development",
-        logLevel: "debug",
-        usePurchaseController: true,
-      }}
+      config={nuxieConfiguration}
       purchaseController={purchaseController}
       onConfigureError={(error) => {
-        const message = error instanceof Error ? error.message : String(error);
-        setConfigureError(message);
+        setConfigureError(error instanceof Error ? error.message : String(error));
       }}
     >
       <DemoScreen />

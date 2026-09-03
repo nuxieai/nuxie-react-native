@@ -1,20 +1,16 @@
 import type {
+  AppAction,
+  EventProperties,
   FeatureAccess,
-  FeatureCheckResult,
   FeatureAccessChangedEvent,
-  FlowDismissedEvent,
-  FlowPresentedEvent,
+  FeatureCheckPolicy,
   FeatureUsageResult,
+  NuxieActivityInfo,
   NuxieConfigureOptions,
   NuxieConfigurationOptions,
   NuxiePurchaseController,
   PurchaseRequest,
-  ProfileResponse,
   RestoreRequest,
-  TriggerOperation,
-  TriggerOptions,
-  TriggerTerminalUpdate,
-  TriggerUpdate,
 } from "./types";
 import type {
   NuxieNativeEventMap,
@@ -27,42 +23,26 @@ import { resolveNativeModule } from "./native-module";
 const WRAPPER_VERSION = "0.1.0";
 
 export interface NuxieClientEventMap {
-  triggerUpdate: NuxieNativeEventMap["onTriggerUpdate"];
   featureAccessChanged: FeatureAccessChangedEvent;
+  activity: NuxieActivityInfo;
+  appAction: AppAction;
   purchaseRequest: PurchaseRequest;
   restoreRequest: RestoreRequest;
-  flowPresented: FlowPresentedEvent;
-  flowDismissed: FlowDismissedEvent;
-}
-
-interface TriggerOperationState {
-  listeners: Set<(update: TriggerUpdate) => void>;
-  resolve: (update: TriggerTerminalUpdate) => void;
-  finished: boolean;
 }
 
 type ClientEventName = keyof NuxieClientEventMap;
 type ClientListenerMap = {
   [K in ClientEventName]: Set<(payload: NuxieClientEventMap[K]) => void>;
 };
-
 type NuxieClientErrorCode = "MISSING_API_KEY";
 
 const CLIENT_TO_NATIVE_EVENT: Record<ClientEventName, NuxieNativeEventName> = {
-  triggerUpdate: "onTriggerUpdate",
   featureAccessChanged: "onFeatureAccessChanged",
+  activity: "onActivity",
+  appAction: "onAppAction",
   purchaseRequest: "onPurchaseRequest",
   restoreRequest: "onRestoreRequest",
-  flowPresented: "onFlowPresented",
-  flowDismissed: "onFlowDismissed",
 };
-
-function generateRequestId(): string {
-  if (typeof globalThis.crypto?.randomUUID === "function") {
-    return globalThis.crypto.randomUUID();
-  }
-  return `trigger-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
 
 function createClientError(code: NuxieClientErrorCode, message: string): Error & { code: NuxieClientErrorCode } {
   const error = new Error(message) as Error & { code: NuxieClientErrorCode };
@@ -70,61 +50,26 @@ function createClientError(code: NuxieClientErrorCode, message: string): Error &
   return error;
 }
 
-function isTerminalTriggerUpdate(update: TriggerUpdate): update is TriggerTerminalUpdate {
-  if (update.kind === "error" || update.kind === "journey") {
-    return true;
-  }
-  if (update.kind === "entitlement") {
-    return update.entitlement.type === "allowed" || update.entitlement.type === "denied";
-  }
-  if (update.kind === "decision") {
-    return (
-      update.decision.type === "no_match" ||
-      update.decision.type === "suppressed" ||
-      update.decision.type === "allowed_immediate" ||
-      update.decision.type === "denied_immediate"
-    );
-  }
-  return false;
-}
-
-function cancelledUpdate(): TriggerTerminalUpdate {
-  return {
-    kind: "error",
-    error: {
-      code: "trigger_cancelled",
-      message: "Trigger cancelled",
-    },
-  };
-}
-
-function startFailedUpdate(error: unknown): TriggerTerminalUpdate {
-  const message = error instanceof Error ? error.message : "trigger_failed";
-  return {
-    kind: "error",
-    error: {
-      code: "trigger_start_failed",
-      message,
-    },
-  };
+function toNativeConfiguration(options: NuxieConfigureOptions): NuxieConfigurationOptions {
+  const { apiKey: _apiKey, usePurchaseController: _usePurchaseController, ...configuration } = options;
+  return configuration;
 }
 
 export class NuxieClient {
   private readonly moduleResolver: () => Promise<NuxieNativeModule>;
   private modulePromise: Promise<NuxieNativeModule> | null = null;
-  private triggerOperations = new Map<string, TriggerOperationState>();
+  private nativeModule: NuxieNativeModule | null = null;
   private nativeSubscriptions = new Map<NuxieNativeEventName, NuxieNativeSubscription>();
   private nativeSubscriptionPromises = new Map<NuxieNativeEventName, Promise<void>>();
   private purchaseController: NuxiePurchaseController | null = null;
   private configured = false;
   private configuring = false;
   private readonly listeners: ClientListenerMap = {
-    triggerUpdate: new Set(),
     featureAccessChanged: new Set(),
+    activity: new Set(),
+    appAction: new Set(),
     purchaseRequest: new Set(),
     restoreRequest: new Set(),
-    flowPresented: new Set(),
-    flowDismissed: new Set(),
   };
 
   constructor(moduleResolver: () => Promise<NuxieNativeModule> = resolveNativeModule) {
@@ -159,10 +104,15 @@ export class NuxieClient {
   }
 
   private async module(): Promise<NuxieNativeModule> {
+    if (this.nativeModule != null) {
+      return this.nativeModule;
+    }
     if (this.modulePromise == null) {
       this.modulePromise = this.moduleResolver();
     }
-    return this.modulePromise;
+    const module = await this.modulePromise;
+    this.nativeModule = module;
+    return module;
   }
 
   private emit<K extends ClientEventName>(eventName: K, payload: NuxieClientEventMap[K]): void {
@@ -200,42 +150,31 @@ export class NuxieClient {
 
   private routeNativeEvent(eventName: NuxieNativeEventName, payload: NuxieNativeEventMap[NuxieNativeEventName]): void {
     switch (eventName) {
-      case "onTriggerUpdate": {
-        const triggerPayload = payload as NuxieNativeEventMap["onTriggerUpdate"];
-        this.handleTriggerUpdate(triggerPayload);
-        this.emit("triggerUpdate", triggerPayload);
-        return;
-      }
-      case "onFeatureAccessChanged": {
+      case "onFeatureAccessChanged":
         this.emit("featureAccessChanged", payload as NuxieNativeEventMap["onFeatureAccessChanged"]);
         return;
-      }
+      case "onActivity":
+        this.emit("activity", payload as NuxieNativeEventMap["onActivity"]);
+        return;
+      case "onAppAction":
+        this.emit("appAction", payload as NuxieNativeEventMap["onAppAction"]);
+        return;
       case "onPurchaseRequest": {
-        const purchasePayload = payload as NuxieNativeEventMap["onPurchaseRequest"];
-        this.emit("purchaseRequest", purchasePayload);
-        void this.handlePurchaseRequest(purchasePayload);
+        const request = payload as NuxieNativeEventMap["onPurchaseRequest"];
+        this.emit("purchaseRequest", request);
+        void this.handlePurchaseRequest(request);
         return;
       }
       case "onRestoreRequest": {
-        const restorePayload = payload as NuxieNativeEventMap["onRestoreRequest"];
-        this.emit("restoreRequest", restorePayload);
-        void this.handleRestoreRequest(restorePayload);
+        const request = payload as NuxieNativeEventMap["onRestoreRequest"];
+        this.emit("restoreRequest", request);
+        void this.handleRestoreRequest(request);
         return;
       }
-      case "onFlowPresented": {
-        this.emit("flowPresented", payload as NuxieNativeEventMap["onFlowPresented"]);
-        return;
-      }
-      case "onFlowDismissed": {
-        this.emit("flowDismissed", payload as NuxieNativeEventMap["onFlowDismissed"]);
-        return;
-      }
-      default:
-        return;
     }
   }
 
-  private async handlePurchaseRequest(payload: NuxieNativeEventMap["onPurchaseRequest"]): Promise<void> {
+  private async handlePurchaseRequest(payload: PurchaseRequest): Promise<void> {
     const controller = this.purchaseController;
     if (controller == null) {
       return;
@@ -243,14 +182,14 @@ export class NuxieClient {
     const module = await this.module();
     try {
       const result = await controller.onPurchase(payload);
-      await module.completePurchase(payload.requestId, result);
+      await module.completePurchase(payload.request_id, result);
     } catch (error) {
       const message = error instanceof Error ? error.message : "purchase_failed";
-      await module.completePurchase(payload.requestId, { type: "failed", message });
+      await module.completePurchase(payload.request_id, { type: "failed", message });
     }
   }
 
-  private async handleRestoreRequest(payload: NuxieNativeEventMap["onRestoreRequest"]): Promise<void> {
+  private async handleRestoreRequest(payload: RestoreRequest): Promise<void> {
     const controller = this.purchaseController;
     if (controller == null) {
       return;
@@ -258,45 +197,11 @@ export class NuxieClient {
     const module = await this.module();
     try {
       const result = await controller.onRestore(payload);
-      await module.completeRestore(payload.requestId, result);
+      await module.completeRestore(payload.request_id, result);
     } catch (error) {
       const message = error instanceof Error ? error.message : "restore_failed";
-      await module.completeRestore(payload.requestId, { type: "failed", message });
+      await module.completeRestore(payload.request_id, { type: "failed", message });
     }
-  }
-
-  private handleTriggerUpdate(payload: NuxieNativeEventMap["onTriggerUpdate"]): void {
-    const operation = this.triggerOperations.get(payload.requestId);
-    if (operation == null || operation.finished) {
-      return;
-    }
-
-    for (const listener of operation.listeners) {
-      listener(payload.update);
-    }
-
-    const terminal = payload.isTerminal === true || isTerminalTriggerUpdate(payload.update);
-    if (!terminal) {
-      return;
-    }
-
-    if (isTerminalTriggerUpdate(payload.update)) {
-      operation.finished = true;
-      this.triggerOperations.delete(payload.requestId);
-      operation.resolve(payload.update);
-      return;
-    }
-
-    const fallbackTerminal: TriggerTerminalUpdate = {
-      kind: "error",
-      error: {
-        code: "invalid_terminal_update",
-        message: "Native bridge marked a non-terminal trigger update as terminal.",
-      },
-    };
-    operation.finished = true;
-    this.triggerOperations.delete(payload.requestId);
-    operation.resolve(fallbackTerminal);
   }
 
   async configure(options: NuxieConfigureOptions): Promise<void> {
@@ -306,7 +211,7 @@ export class NuxieClient {
       const explicitApiKey = options.apiKey?.trim();
       const defaultApiKey =
         explicitApiKey == null || explicitApiKey.length === 0
-          ? await module.getDefaultApiKey?.().catch(() => null)
+          ? await module.getDefaultApiKey().catch(() => null)
           : null;
       const apiKey = explicitApiKey && explicitApiKey.length > 0 ? explicitApiKey : defaultApiKey?.trim();
       if (apiKey == null || apiKey.length === 0) {
@@ -316,14 +221,18 @@ export class NuxieClient {
         );
       }
 
-      const config = toNativeConfiguration(options);
       const usePurchaseController = options.usePurchaseController === true || this.purchaseController != null;
-      await module.configure(apiKey, config, usePurchaseController, WRAPPER_VERSION);
-      await this.ensureNativeSubscription("onTriggerUpdate");
-      await this.ensureNativeSubscription("onFeatureAccessChanged");
+      await module.configure(apiKey, toNativeConfiguration(options), usePurchaseController, WRAPPER_VERSION);
+      await Promise.all([
+        this.ensureNativeSubscription("onFeatureAccessChanged"),
+        this.ensureNativeSubscription("onActivity"),
+        this.ensureNativeSubscription("onAppAction"),
+      ]);
       if (usePurchaseController) {
-        await this.ensureNativeSubscription("onPurchaseRequest");
-        await this.ensureNativeSubscription("onRestoreRequest");
+        await Promise.all([
+          this.ensureNativeSubscription("onPurchaseRequest"),
+          this.ensureNativeSubscription("onRestoreRequest"),
+        ]);
       }
       this.configured = true;
     } finally {
@@ -337,193 +246,85 @@ export class NuxieClient {
     this.configured = false;
     this.configuring = false;
     this.nativeSubscriptionPromises.clear();
-
-    for (const [, subscription] of this.nativeSubscriptions) {
+    for (const subscription of this.nativeSubscriptions.values()) {
       subscription.remove();
     }
     this.nativeSubscriptions.clear();
-    for (const [requestId, operation] of this.triggerOperations) {
-      if (!operation.finished) {
-        await module.cancelTrigger(requestId).catch(() => undefined);
-        operation.resolve(cancelledUpdate());
-      }
-    }
-    this.triggerOperations.clear();
   }
 
   async identify(
     distinctId: string,
-    opts?: {
+    options?: {
       userProperties?: Record<string, unknown>;
       userPropertiesSetOnce?: Record<string, unknown>;
     },
   ): Promise<void> {
     const module = await this.module();
-    await module.identify(distinctId, opts?.userProperties, opts?.userPropertiesSetOnce);
+    await module.identify(distinctId, options?.userProperties, options?.userPropertiesSetOnce);
   }
 
-  async reset(opts?: { keepAnonymousId?: boolean }): Promise<void> {
+  async reset(options?: { keepAnonymousId?: boolean }): Promise<void> {
     const module = await this.module();
-    await module.reset(opts?.keepAnonymousId);
+    await module.reset(options?.keepAnonymousId ?? false);
   }
 
   async getDistinctId(): Promise<string> {
-    const module = await this.module();
-    return module.getDistinctId();
+    return (await this.module()).getDistinctId();
   }
 
   async getAnonymousId(): Promise<string> {
-    const module = await this.module();
-    return module.getAnonymousId();
+    return (await this.module()).getAnonymousId();
   }
 
   async isIdentified(): Promise<boolean> {
-    const module = await this.module();
-    return module.getIsIdentified();
+    return (await this.module()).getIsIdentified();
   }
 
-  trigger(eventName: string, opts?: TriggerOptions): TriggerOperation {
-    const requestId = generateRequestId();
-    let resolveDone: ((update: TriggerTerminalUpdate) => void) | null = null;
-    const done = new Promise<TriggerTerminalUpdate>((resolve) => {
-      resolveDone = resolve;
-    });
-    const state: TriggerOperationState = {
-      listeners: new Set(),
-      resolve: (update) => {
-        if (resolveDone != null) {
-          resolveDone(update);
-        }
-      },
-      finished: false,
-    };
-    this.triggerOperations.set(requestId, state);
-
-    void (async () => {
-      try {
-        await this.ensureNativeSubscription("onTriggerUpdate");
-        const module = await this.module();
-        await module.startTrigger(requestId, eventName, opts);
-      } catch (error) {
-        const update = startFailedUpdate(error);
-        for (const listener of state.listeners) {
-          listener(update);
-        }
-        state.finished = true;
-        this.triggerOperations.delete(requestId);
-        state.resolve(update);
-      }
-    })();
-
-    return {
-      requestId,
-      cancel: async () => {
-        const existing = this.triggerOperations.get(requestId);
-        if (existing == null || existing.finished) {
-          return;
-        }
-        const module = await this.module();
-        await module.cancelTrigger(requestId).catch(() => undefined);
-        const update = cancelledUpdate();
-        for (const listener of existing.listeners) {
-          listener(update);
-        }
-        existing.finished = true;
-        this.triggerOperations.delete(requestId);
-        existing.resolve(update);
-      },
-      onUpdate: (listener) => {
-        state.listeners.add(listener);
-        return () => {
-          state.listeners.delete(listener);
-        };
-      },
-      done,
-    };
+  /** Capture an event. Any matching Journey runs asynchronously in native code. */
+  trigger(eventName: string, properties?: EventProperties): void {
+    if (!this.configured || this.nativeModule == null) {
+      return;
+    }
+    this.nativeModule.trigger(eventName, properties);
   }
 
-  async triggerOnce(eventName: string, opts?: TriggerOptions): Promise<TriggerTerminalUpdate> {
-    return this.trigger(eventName, opts).done;
+  async dismiss(): Promise<void> {
+    await (await this.module()).dismiss();
   }
 
-  async showFlow(flowId: string): Promise<void> {
-    const module = await this.module();
-    await module.showFlow(flowId);
+  async setLocaleIdentifier(localeIdentifier: string | null): Promise<void> {
+    await (await this.module()).setLocaleIdentifier(localeIdentifier);
   }
 
-  async refreshProfile(): Promise<ProfileResponse> {
-    const module = await this.module();
-    return module.refreshProfile();
-  }
-
-  async hasFeature(featureId: string, opts?: { requiredBalance?: number; entityId?: string }): Promise<FeatureAccess> {
-    const module = await this.module();
-    return module.hasFeature(featureId, opts?.requiredBalance, opts?.entityId);
-  }
-
-  async getCachedFeature(featureId: string, opts?: { entityId?: string }): Promise<FeatureAccess | null> {
-    const module = await this.module();
-    return module.getCachedFeature(featureId, opts?.entityId);
-  }
-
-  async checkFeature(
+  async hasFeature(
     featureId: string,
-    opts?: { requiredBalance?: number; entityId?: string },
-  ): Promise<FeatureCheckResult> {
-    const module = await this.module();
-    return module.checkFeature(featureId, opts?.requiredBalance, opts?.entityId);
-  }
-
-  async refreshFeature(
-    featureId: string,
-    opts?: { requiredBalance?: number; entityId?: string },
-  ): Promise<FeatureCheckResult> {
-    const module = await this.module();
-    return module.refreshFeature(featureId, opts?.requiredBalance, opts?.entityId);
+    options?: { requiredBalance?: number; entityId?: string; policy?: FeatureCheckPolicy },
+  ): Promise<FeatureAccess> {
+    return (await this.module()).hasFeature(
+      featureId,
+      options?.requiredBalance,
+      options?.entityId,
+      options?.policy,
+    );
   }
 
   async useFeature(
     featureId: string,
-    opts?: { amount?: number; entityId?: string; metadata?: Record<string, unknown> },
+    options?: { amount?: number; entityId?: string; metadata?: Record<string, unknown> },
   ): Promise<void> {
-    const module = await this.module();
-    await module.useFeature(featureId, opts?.amount, opts?.entityId, opts?.metadata);
+    await (await this.module()).useFeature(featureId, options?.amount, options?.entityId, options?.metadata);
   }
 
   async useFeatureAndWait(
     featureId: string,
-    opts?: { amount?: number; entityId?: string; setUsage?: boolean; metadata?: Record<string, unknown> },
+    options?: { amount?: number; entityId?: string; setUsage?: boolean; metadata?: Record<string, unknown> },
   ): Promise<FeatureUsageResult> {
-    const module = await this.module();
-    return module.useFeatureAndWait(featureId, opts?.amount, opts?.entityId, opts?.setUsage, opts?.metadata);
+    return (await this.module()).useFeatureAndWait(
+      featureId,
+      options?.amount,
+      options?.entityId,
+      options?.setUsage,
+      options?.metadata,
+    );
   }
-
-  async flushEvents(): Promise<boolean> {
-    const module = await this.module();
-    return module.flushEvents();
-  }
-
-  async getQueuedEventCount(): Promise<number> {
-    const module = await this.module();
-    return module.getQueuedEventCount();
-  }
-
-  async pauseEventQueue(): Promise<void> {
-    const module = await this.module();
-    await module.pauseEventQueue();
-  }
-
-  async resumeEventQueue(): Promise<void> {
-    const module = await this.module();
-    await module.resumeEventQueue();
-  }
-}
-
-function toNativeConfiguration(config: NuxieConfigureOptions): NuxieConfigurationOptions {
-  const {
-    apiKey: _apiKey,
-    usePurchaseController: _usePurchaseController,
-    ...nativeConfig
-  } = config;
-  return nativeConfig;
 }

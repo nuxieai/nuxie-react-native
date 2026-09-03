@@ -5,15 +5,13 @@ import type {
   NuxieNativeSubscription,
 } from "../native-module";
 import type {
+  EventProperties,
   FeatureAccess,
-  FeatureCheckResult,
+  FeatureCheckPolicy,
   FeatureUsageResult,
   NuxieConfigurationOptions,
-  ProfileResponse,
-  RestoreResult,
-  TriggerOptions,
-  TriggerUpdate,
   PurchaseResult,
+  RestoreResult,
 } from "../types";
 
 type ListenerMap = {
@@ -21,40 +19,40 @@ type ListenerMap = {
 };
 
 export class TestNativeModule implements NuxieNativeModule {
-  public readonly listeners: ListenerMap = {
-    onTriggerUpdate: new Set(),
+  readonly listeners: ListenerMap = {
     onFeatureAccessChanged: new Set(),
+    onActivity: new Set(),
+    onAppAction: new Set(),
     onPurchaseRequest: new Set(),
     onRestoreRequest: new Set(),
-    onFlowPresented: new Set(),
-    onFlowDismissed: new Set(),
   };
 
-  public configureArgs: {
+  configureArgs: {
     apiKey: string;
     options?: NuxieConfigurationOptions;
     usePurchaseController?: boolean;
     wrapperVersion?: string;
   } | null = null;
-  public defaultApiKey: string | null = null;
-  public triggerStarts: Array<{ requestId: string; eventName: string; options?: TriggerOptions }> = [];
-  public cancelledRequestIds: string[] = [];
-  public completedPurchases: Array<{ requestId: string; result: PurchaseResult }> = [];
-  public completedRestores: Array<{ requestId: string; result: RestoreResult }> = [];
-
-  public throwOnStartTrigger = false;
-  public throwOnCancelTrigger = false;
+  defaultApiKey: string | null = null;
+  triggers: Array<{ eventName: string; properties?: EventProperties }> = [];
+  resetValues: boolean[] = [];
+  dismissed = 0;
+  localeIdentifiers: Array<string | null> = [];
+  featureChecks: Array<{
+    featureId: string;
+    requiredBalance?: number;
+    entityId?: string;
+    policy?: FeatureCheckPolicy;
+  }> = [];
+  completedPurchases: Array<{ requestId: string; result: PurchaseResult }> = [];
+  completedRestores: Array<{ requestId: string; result: RestoreResult }> = [];
 
   addListener<K extends NuxieNativeEventName>(
     eventName: K,
     listener: (payload: NuxieNativeEventMap[K]) => void,
   ): NuxieNativeSubscription {
     this.listeners[eventName].add(listener as never);
-    return {
-      remove: () => {
-        this.listeners[eventName].delete(listener as never);
-      },
-    };
+    return { remove: () => this.listeners[eventName].delete(listener as never) };
   }
 
   emit<K extends NuxieNativeEventName>(eventName: K, payload: NuxieNativeEventMap[K]): void {
@@ -77,10 +75,11 @@ export class TestNativeModule implements NuxieNativeModule {
   }
 
   async shutdown(): Promise<void> {}
-
   async identify(): Promise<void> {}
 
-  async reset(): Promise<void> {}
+  async reset(keepAnonymousId = false): Promise<void> {
+    this.resetValues.push(keepAnonymousId);
+  }
 
   async getDistinctId(): Promise<string> {
     return "distinct_123";
@@ -94,58 +93,26 @@ export class TestNativeModule implements NuxieNativeModule {
     return true;
   }
 
-  async startTrigger(requestId: string, eventName: string, options?: TriggerOptions): Promise<void> {
-    if (this.throwOnStartTrigger) {
-      throw new Error("start failed");
-    }
-    this.triggerStarts.push({ requestId, eventName, options });
+  trigger(eventName: string, properties?: EventProperties): void {
+    this.triggers.push({ eventName, properties });
   }
 
-  async cancelTrigger(requestId: string): Promise<void> {
-    if (this.throwOnCancelTrigger) {
-      throw new Error("cancel failed");
-    }
-    this.cancelledRequestIds.push(requestId);
+  async dismiss(): Promise<void> {
+    this.dismissed += 1;
   }
 
-  async showFlow(): Promise<void> {}
-
-  async refreshProfile(): Promise<ProfileResponse> {
-    return {};
+  async setLocaleIdentifier(localeIdentifier: string | null): Promise<void> {
+    this.localeIdentifiers.push(localeIdentifier);
   }
 
-  async hasFeature(): Promise<FeatureAccess> {
-    return { allowed: true, unlimited: false, balance: 3, type: "metered" };
-  }
-
-  async getCachedFeature(): Promise<FeatureAccess | null> {
-    return null;
-  }
-
-  async checkFeature(): Promise<FeatureCheckResult> {
-    return {
-      customerId: "cust_1",
-      featureId: "f_1",
-      requiredBalance: 1,
-      code: "ok",
-      allowed: true,
-      unlimited: false,
-      balance: 3,
-      type: "metered",
-    };
-  }
-
-  async refreshFeature(): Promise<FeatureCheckResult> {
-    return {
-      customerId: "cust_1",
-      featureId: "f_1",
-      requiredBalance: 1,
-      code: "ok",
-      allowed: true,
-      unlimited: false,
-      balance: 3,
-      type: "metered",
-    };
+  async hasFeature(
+    featureId: string,
+    requiredBalance?: number,
+    entityId?: string,
+    policy?: FeatureCheckPolicy,
+  ): Promise<FeatureAccess> {
+    this.featureChecks.push({ featureId, requiredBalance, entityId, policy });
+    return { allowed: true, unlimited: false, balance: 3.5, type: "metered" };
   }
 
   async useFeature(): Promise<void> {}
@@ -154,26 +121,17 @@ export class TestNativeModule implements NuxieNativeModule {
     return {
       success: true,
       featureId: "f_1",
-      amountUsed: 1,
-      usage: {
-        current: 2,
-        limit: 10,
-        remaining: 8,
+      amountUsed: 1.5,
+      message: null,
+      usage: { current: 2.5, limit: 10.5, remaining: 8 },
+      authoritativeAccess: {
+        allowed: true,
+        unlimited: false,
+        balance: 8,
+        type: "creditSystem",
       },
     };
   }
-
-  async flushEvents(): Promise<boolean> {
-    return true;
-  }
-
-  async getQueuedEventCount(): Promise<number> {
-    return 0;
-  }
-
-  async pauseEventQueue(): Promise<void> {}
-
-  async resumeEventQueue(): Promise<void> {}
 
   async completePurchase(requestId: string, result: PurchaseResult): Promise<void> {
     this.completedPurchases.push({ requestId, result });
@@ -182,17 +140,4 @@ export class TestNativeModule implements NuxieNativeModule {
   async completeRestore(requestId: string, result: RestoreResult): Promise<void> {
     this.completedRestores.push({ requestId, result });
   }
-}
-
-export function triggerUpdate(
-  requestId: string,
-  update: TriggerUpdate,
-  isTerminal?: boolean,
-): NuxieNativeEventMap["onTriggerUpdate"] {
-  return {
-    requestId,
-    update,
-    isTerminal,
-    timestampMs: Date.now(),
-  };
 }

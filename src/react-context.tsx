@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import { NuxieClient } from "./client";
 import { Nuxie } from "./singleton";
@@ -25,6 +25,35 @@ export function NuxieProvider({
   client = Nuxie,
   onConfigureError,
 }: NuxieProviderProps): any {
+  const configureErrorRef = useRef(onConfigureError);
+  configureErrorRef.current = onConfigureError;
+  const stableConfig = useMemo<NuxieConfigureOptions | null>(() => {
+    if (config == null) {
+      return null;
+    }
+    return {
+      apiKey: config.apiKey,
+      environment: config.environment,
+      logLevel: config.logLevel,
+      enableConsoleLogging: config.enableConsoleLogging,
+      redactSensitiveData: config.redactSensitiveData,
+      localeIdentifier: config.localeIdentifier,
+      purchaseHandlingMode: config.purchaseHandlingMode,
+      testStoreEnabled: config.testStoreEnabled,
+      usePurchaseController: config.usePurchaseController,
+    };
+  }, [
+    config?.apiKey,
+    config?.environment,
+    config?.logLevel,
+    config?.enableConsoleLogging,
+    config?.redactSensitiveData,
+    config?.localeIdentifier,
+    config?.purchaseHandlingMode,
+    config?.testStoreEnabled,
+    config?.usePurchaseController,
+  ]);
+
   useEffect(() => {
     client.setPurchaseController(purchaseController);
     return () => {
@@ -35,24 +64,24 @@ export function NuxieProvider({
   }, [client, purchaseController]);
 
   useEffect(() => {
-    if (config == null) {
+    if (stableConfig == null) {
       return;
     }
     let cancelled = false;
     void (async () => {
       try {
-        await client.configure(config);
+        await client.configure(stableConfig);
       } catch (error) {
         if (cancelled) {
           return;
         }
-        onConfigureError?.(error);
+        configureErrorRef.current?.(error);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [client, config, onConfigureError]);
+  }, [client, stableConfig]);
 
   const value = useMemo<NuxieContextValue>(() => ({ client }), [client]);
   return <NuxieContext.Provider value={value}>{children}</NuxieContext.Provider>;

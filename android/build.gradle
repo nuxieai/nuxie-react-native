@@ -5,10 +5,10 @@ plugins {
 
 android {
   namespace = "expo.modules.nuxieexpo"
-  compileSdk = 34
+  compileSdk = 36
 
   defaultConfig {
-    minSdk = 21
+    minSdk = 23
   }
 
   compileOptions {
@@ -23,5 +23,5 @@ android {
 
 dependencies {
   implementation(project(":expo-modules-core"))
-  implementation("io.nuxie:nuxie-android:0.1.0")
+  implementation("ai.nuxie:nuxie-android:0.1.0")
 }

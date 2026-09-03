@@ -1,6 +1,7 @@
 # Bare React Native Setup
 
-Bare React Native apps can use the same JS API as Expo apps.
+Bare React Native apps use the same TypeScript API with native linkage managed
+by the host project.
 
 ## Install
 
@@ -10,26 +11,23 @@ bun add @nuxie/react-native
 
 ## iOS
 
-- Ensure Nuxie iOS SDK is available for your app target.
-- Add any required usage-description keys if flows request tracking, camera,
-  microphone, photos, or foreground location.
-- Run CocoaPods install after dependency changes.
+Ensure the Nuxie iOS SDK is available to the app target, then install pods:
 
 ```bash
 cd ios
 pod install
 ```
 
+The wrapper pins the Nuxie pod version it was built against.
+
 ## Android
 
-- Ensure your app resolves `io.nuxie:nuxie-android` in Gradle.
-- Declare any dangerous permissions used by flow-authored
-  `request_permission(...)` actions in your app manifest.
-- Build normally with your RN toolchain.
+Ensure Gradle resolves `ai.nuxie:nuxie-android`. The wrapper pins the native
+artifact version it was built against and requires minSdk 23.
 
 ## Configure
 
-Use explicit API key in code (recommended for bare setup unless you implement equivalent native key metadata):
+Bare apps normally pass the API key directly:
 
 ```ts
 await Nuxie.configure({
@@ -38,23 +36,12 @@ await Nuxie.configure({
 });
 ```
 
-## Known Difference vs Expo Plugin
+The Expo plugin fallback is unavailable unless the host also uses Expo config
+plugins or writes equivalent `NUXIE_API_KEY` metadata itself.
 
-The Expo config plugin is not part of a bare RN workflow unless you also run Expo prebuild tooling.
+## Native permission declarations
 
-Typical native declarations for permission-based flows:
-
-- iOS:
-  - `NSUserTrackingUsageDescription`
-  - `NSCameraUsageDescription`
-  - `NSMicrophoneUsageDescription`
-  - `NSPhotoLibraryUsageDescription`
-  - `NSLocationWhenInUseUsageDescription`
-- Android:
-  - `android.permission.POST_NOTIFICATIONS`
-  - `android.permission.CAMERA`
-  - `android.permission.RECORD_AUDIO`
-  - `android.permission.READ_MEDIA_IMAGES` on Android 13+ and
-    `android.permission.READ_EXTERNAL_STORAGE` on Android 12 and below
-  - `android.permission.ACCESS_COARSE_LOCATION` and/or
-    `android.permission.ACCESS_FINE_LOCATION`
+Declare every permission used by authored Experience actions. Common examples
+include tracking, camera, microphone, photos, foreground location, and Android
+13+ notifications. The wrapper does not add these declarations because their
+purpose strings and platform policy belong to the host app.

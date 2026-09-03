@@ -1,58 +1,28 @@
 import type {
+  AppAction,
+  EventProperties,
   FeatureAccess,
-  FeatureCheckResult,
+  FeatureCheckPolicy,
   FeatureUsageResult,
+  NuxieActivityInfo,
   NuxieConfigurationOptions,
-  ProfileResponse,
-  RestoreResult,
-  TriggerOptions,
-  TriggerUpdate,
+  PurchaseRequest,
   PurchaseResult,
+  RestoreRequest,
+  RestoreResult,
 } from "./types";
 
 export type NuxieNativeEventMap = {
-  onTriggerUpdate: {
-    requestId: string;
-    update: TriggerUpdate;
-    isTerminal?: boolean;
-    timestampMs: number;
-  };
   onFeatureAccessChanged: {
     featureId: string;
-    from?: FeatureAccess | null;
+    from: FeatureAccess | null;
     to: FeatureAccess;
     timestampMs: number;
   };
-  onPurchaseRequest: {
-    requestId: string;
-    platform: "ios" | "android";
-    productId: string;
-    basePlanId?: string | null;
-    offerId?: string | null;
-    displayName?: string | null;
-    displayPrice?: string | null;
-    price?: number | null;
-    currencyCode?: string | null;
-    timestampMs: number;
-  };
-  onRestoreRequest: {
-    requestId: string;
-    platform: "ios" | "android";
-    timestampMs: number;
-  };
-  onFlowPresented: {
-    flowId: string;
-    timestampMs: number;
-  };
-  onFlowDismissed: {
-    flowId?: string | null;
-    reason?: string | null;
-    journeyId?: string;
-    campaignId?: string | null;
-    screenId?: string | null;
-    error?: string | null;
-    timestampMs: number;
-  };
+  onActivity: NuxieActivityInfo;
+  onAppAction: AppAction;
+  onPurchaseRequest: PurchaseRequest;
+  onRestoreRequest: RestoreRequest;
 };
 
 export type NuxieNativeEventName = keyof NuxieNativeEventMap;
@@ -79,15 +49,21 @@ export interface NuxieNativeModule {
   getDistinctId(): Promise<string>;
   getAnonymousId(): Promise<string>;
   getIsIdentified(): Promise<boolean>;
-  startTrigger(requestId: string, eventName: string, options?: TriggerOptions): Promise<void>;
-  cancelTrigger(requestId: string): Promise<void>;
-  showFlow(flowId: string): Promise<void>;
-  refreshProfile(): Promise<ProfileResponse>;
-  hasFeature(featureId: string, requiredBalance?: number, entityId?: string): Promise<FeatureAccess>;
-  getCachedFeature(featureId: string, entityId?: string): Promise<FeatureAccess | null>;
-  checkFeature(featureId: string, requiredBalance?: number, entityId?: string): Promise<FeatureCheckResult>;
-  refreshFeature(featureId: string, requiredBalance?: number, entityId?: string): Promise<FeatureCheckResult>;
-  useFeature(featureId: string, amount?: number, entityId?: string, metadata?: Record<string, unknown>): Promise<void>;
+  trigger(eventName: string, properties?: EventProperties): void;
+  dismiss(): Promise<void>;
+  setLocaleIdentifier(localeIdentifier: string | null): Promise<void>;
+  hasFeature(
+    featureId: string,
+    requiredBalance?: number,
+    entityId?: string,
+    policy?: FeatureCheckPolicy,
+  ): Promise<FeatureAccess>;
+  useFeature(
+    featureId: string,
+    amount?: number,
+    entityId?: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<void>;
   useFeatureAndWait(
     featureId: string,
     amount?: number,
@@ -95,10 +71,6 @@ export interface NuxieNativeModule {
     setUsage?: boolean,
     metadata?: Record<string, unknown>,
   ): Promise<FeatureUsageResult>;
-  flushEvents(): Promise<boolean>;
-  getQueuedEventCount(): Promise<number>;
-  pauseEventQueue(): Promise<void>;
-  resumeEventQueue(): Promise<void>;
   completePurchase(requestId: string, result: PurchaseResult): Promise<void>;
   completeRestore(requestId: string, result: RestoreResult): Promise<void>;
   addListener<K extends NuxieNativeEventName>(
