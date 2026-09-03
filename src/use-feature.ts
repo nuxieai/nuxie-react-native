@@ -1,27 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { FeatureAccess, FeatureCheckResult } from "./types";
+import type { FeatureAccess, FeatureCheckPolicy } from "./types";
 import { useNuxieClient } from "./react-context";
 
 export interface UseFeatureOptions {
   requiredBalance?: number;
   entityId?: string;
-  refreshOnMount?: boolean;
+  policy?: FeatureCheckPolicy;
 }
 
 export interface UseFeatureResult {
   value: FeatureAccess | null;
   isLoading: boolean;
   error: Error | null;
-  refresh: () => Promise<FeatureCheckResult>;
-}
-
-function toFeatureAccess(result: FeatureCheckResult): FeatureAccess {
-  return {
-    allowed: result.allowed,
-    unlimited: result.unlimited,
-    balance: result.balance ?? null,
-    type: result.type,
-  };
+  refresh: () => Promise<FeatureAccess>;
 }
 
 export function useFeature(featureId: string, options: UseFeatureOptions = {}): UseFeatureResult {
@@ -31,14 +22,14 @@ export function useFeature(featureId: string, options: UseFeatureOptions = {}): 
   const [error, setError] = useState<Error | null>(null);
 
   const refresh = useCallback(async () => {
-    const result = await client.refreshFeature(featureId, {
+    const access = await client.hasFeature(featureId, {
       requiredBalance: options.requiredBalance,
       entityId: options.entityId,
+      policy: "remote",
     });
-    const access = toFeatureAccess(result);
     setValue(access);
     setError(null);
-    return result;
+    return access;
   }, [client, featureId, options.entityId, options.requiredBalance]);
 
   useEffect(() => {
@@ -51,6 +42,7 @@ export function useFeature(featureId: string, options: UseFeatureOptions = {}): 
         const access = await client.hasFeature(featureId, {
           requiredBalance: options.requiredBalance,
           entityId: options.entityId,
+          policy: options.policy,
         });
         if (!cancelled) {
           setValue(access);
@@ -63,12 +55,6 @@ export function useFeature(featureId: string, options: UseFeatureOptions = {}): 
         if (!cancelled) {
           setIsLoading(false);
         }
-      }
-
-      if (options.refreshOnMount === true && !cancelled) {
-        await refresh().catch(() => {
-          // Keep best-effort refresh errors isolated from initial load.
-        });
       }
     })();
 
@@ -85,7 +71,7 @@ export function useFeature(featureId: string, options: UseFeatureOptions = {}): 
       cancelled = true;
       unsubscribe();
     };
-  }, [client, featureId, options.entityId, options.refreshOnMount, options.requiredBalance, refresh]);
+  }, [client, featureId, options.entityId, options.policy, options.requiredBalance]);
 
   return useMemo(
     () => ({

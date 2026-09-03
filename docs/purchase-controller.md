@@ -1,6 +1,8 @@
 # Purchase Controller Guide
 
-Use this when your app already owns in-app purchase flows and you want Nuxie runtime actions to delegate to your JS purchase layer.
+Use a purchase controller when the host app or a billing provider owns
+checkout. Nuxie still chooses the exact product shown by the Experience and
+waits for the host's outcome declaration.
 
 ## Interface
 
@@ -11,74 +13,72 @@ type NuxiePurchaseController = {
 };
 ```
 
+Requests use canonical snake_case fields. In particular, read
+`request.request_id`, `request.product_id`, `request.store_product_id`, and the
+optional Play plan and offer identifiers.
+
+Purchase results:
+
+- `{ type: "purchased" }`
+- `{ type: "cancelled" }`
+- `{ type: "pending" }`
+- `{ type: "failed", message: string }`
+
+Restore results:
+
+- `{ type: "restored" }`
+- `{ type: "no_purchases" }`
+- `{ type: "failed", message: string }`
+
 ## Wiring
+
+```ts
+Nuxie.setPurchaseController(controller);
+await Nuxie.configure({
+  apiKey: "NX_PROD_...",
+  usePurchaseController: true,
+  purchaseHandlingMode: "observer",
+});
+```
+
+Or pass the controller to `NuxieProvider`:
 
 ```tsx
 <NuxieProvider
   config={{ apiKey: "NX_PROD_...", usePurchaseController: true }}
   purchaseController={controller}
-/>
+>
+  <App />
+</NuxieProvider>
 ```
-
-Or imperative:
-
-```ts
-Nuxie.setPurchaseController(controller);
-await Nuxie.configure({ apiKey: "NX_PROD_...", usePurchaseController: true });
-```
-
-## Purchase Result Shapes
-
-### Purchase
-
-- `success`
-- `cancelled`
-- `pending`
-- `failed`
-
-### Restore
-
-- `success`
-- `no_purchases`
-- `failed`
 
 ## Example
 
 ```ts
 const controller: NuxiePurchaseController = {
   async onPurchase(request) {
-    const result = await myBilling.purchase(request.productId);
-
-    if (result.status === "ok") {
+    try {
+      const result = await myBilling.purchase(request.store_product_id);
+      if (result.status === "cancelled") return { type: "cancelled" };
+      if (result.status === "pending") return { type: "pending" };
+      return result.status === "purchased"
+        ? { type: "purchased" }
+        : { type: "failed", message: result.message ?? "purchase_failed" };
+    } catch (error) {
       return {
-        type: "success",
-        productId: request.productId,
-        purchaseToken: result.purchaseToken,
+        type: "failed",
+        message: error instanceof Error ? error.message : "purchase_failed",
       };
     }
-
-    if (result.status === "cancelled") {
-      return { type: "cancelled" };
-    }
-
-    return { type: "failed", message: result.message ?? "purchase_failed" };
   },
 
   async onRestore() {
     const restored = await myBilling.restore();
-    return restored.count > 0
-      ? { type: "success", restoredCount: restored.count }
-      : { type: "no_purchases" };
+    return restored ? { type: "restored" } : { type: "no_purchases" };
   },
 };
 ```
 
-## Timeout
-
-Native purchase/restore requests time out after 60 seconds if completion is never returned.
-
-## Best Practices
-
-- Always return an explicit terminal result from your billing integration.
-- Convert unknown SDK errors into `failed` with meaningful `message`.
-- Ensure only one active billing attempt per request ID in your app layer.
+Native requests fail after 60 seconds if the controller does not return.
+Always settle each request exactly once and preserve pending checkout as
+`pending` instead of guessing success or failure.

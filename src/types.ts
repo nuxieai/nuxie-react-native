@@ -4,6 +4,7 @@ export type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
+export type EventProperties = Record<string, JsonValue>;
 export type NuxieLogLevel =
   | "verbose"
   | "debug"
@@ -11,45 +12,19 @@ export type NuxieLogLevel =
   | "warning"
   | "error"
   | "none";
-export type NuxieEnvironment =
-  | "production"
-  | "staging"
-  | "development"
-  | "custom";
-export type EventLinkingPolicy = "keep_separate" | "migrate_on_identify";
+export type NuxieEnvironment = "production" | "development";
+export type PurchaseHandlingMode = "full" | "observer";
 
+/** Customer-owned setup values shared by the native SDKs. */
 export interface NuxieConfigurationOptions {
   environment?: NuxieEnvironment;
-  apiEndpoint?: string;
   logLevel?: NuxieLogLevel;
   enableConsoleLogging?: boolean;
-  enableFileLogging?: boolean;
   redactSensitiveData?: boolean;
-  requestTimeoutSeconds?: number;
-  retryCount?: number;
-  retryDelaySeconds?: number;
-  syncIntervalSeconds?: number;
-  enableCompression?: boolean;
-  eventBatchSize?: number;
-  flushAt?: number;
-  flushIntervalSeconds?: number;
-  maxQueueSize?: number;
-  maxCacheSizeBytes?: number;
-  cacheExpirationSeconds?: number;
-  enableEncryption?: boolean;
-  customStoragePath?: string | null;
-  featureCacheTtlSeconds?: number;
-  defaultPaywallTimeoutSeconds?: number;
-  respectDoNotTrack?: boolean;
-  eventLinkingPolicy?: EventLinkingPolicy;
   localeIdentifier?: string | null;
-  isDebugMode?: boolean;
-  enablePlugins?: boolean;
-  maxFlowCacheSizeBytes?: number;
-  flowCacheExpirationSeconds?: number;
-  maxConcurrentFlowDownloads?: number;
-  flowDownloadTimeoutSeconds?: number;
-  flowCacheDirectory?: string | null;
+  purchaseHandlingMode?: PurchaseHandlingMode;
+  /** iOS development builds only. Ignored on Android. */
+  testStoreEnabled?: boolean;
 }
 
 export interface NuxieConfigureOptions extends NuxieConfigurationOptions {
@@ -57,154 +32,55 @@ export interface NuxieConfigureOptions extends NuxieConfigurationOptions {
   usePurchaseController?: boolean;
 }
 
-export interface TriggerOptions {
-  properties?: Record<string, JsonValue>;
-  userProperties?: Record<string, JsonValue>;
-  userPropertiesSetOnce?: Record<string, JsonValue>;
-}
-
-export interface JourneyRef {
-  journeyId: string;
-  campaignId: string;
-  flowId?: string | null;
-}
-
-export type SuppressReason =
-  | "already_active"
-  | "reentry_limited"
-  | "holdout"
-  | "no_flow"
-  | "unknown";
-
-export type TriggerDecision =
-  | { type: "no_match" }
-  | { type: "suppressed"; reason: SuppressReason; rawReason?: string }
-  | { type: "journey_started"; ref: JourneyRef }
-  | { type: "journey_resumed"; ref: JourneyRef }
-  | { type: "flow_shown"; ref: JourneyRef }
-  | { type: "allowed_immediate" }
-  | { type: "denied_immediate" };
-
-export type GateSource = "cache" | "purchase" | "restore";
-
-export type EntitlementUpdate =
-  | { type: "pending" }
-  | { type: "allowed"; source: GateSource }
-  | { type: "denied" };
-
-export type JourneyExitReason =
-  | "completed"
-  | "dismissed"
-  | "goal_met"
-  | "trigger_unmatched"
-  | "expired"
-  | "error"
-  | "cancelled";
-
-export interface JourneyUpdate {
-  journeyId: string;
-  campaignId: string;
-  flowId?: string | null;
-  exitReason: JourneyExitReason;
-  goalMet: boolean;
-  goalMetAtEpochMillis?: number | null;
-  durationSeconds?: number | null;
-  flowExitReason?: string | null;
-}
-
-export interface TriggerError {
-  code: string;
-  message: string;
-}
-
-export type TriggerUpdate =
-  | { kind: "decision"; decision: TriggerDecision }
-  | { kind: "entitlement"; entitlement: EntitlementUpdate }
-  | { kind: "journey"; journey: JourneyUpdate }
-  | { kind: "error"; error: TriggerError };
-
-export type TriggerTerminalUpdate =
-  | Extract<TriggerUpdate, { kind: "journey" } | { kind: "error" }>
-  | {
-      kind: "decision";
-      decision: Extract<
-        TriggerDecision,
-        | { type: "no_match" }
-        | { type: "suppressed" }
-        | { type: "allowed_immediate" }
-        | { type: "denied_immediate" }
-      >;
-    }
-  | {
-      kind: "entitlement";
-      entitlement: Extract<
-        EntitlementUpdate,
-        { type: "allowed" } | { type: "denied" }
-      >;
-    };
-
+export type FeatureCheckPolicy = "cacheFirst" | "remote";
 export type FeatureType = "boolean" | "metered" | "creditSystem";
 
 export interface FeatureAccess {
   allowed: boolean;
   unlimited: boolean;
-  balance?: number | null;
+  balance: number | null;
   type: FeatureType;
 }
 
 export interface FeatureAccessChangedEvent {
   featureId: string;
-  from?: FeatureAccess | null;
+  from: FeatureAccess | null;
   to: FeatureAccess;
   timestampMs: number;
-}
-
-export interface FeatureCheckResult {
-  customerId: string;
-  featureId: string;
-  requiredBalance: number;
-  code: string;
-  allowed: boolean;
-  unlimited: boolean;
-  balance?: number | null;
-  type: FeatureType;
-  preview?: JsonValue;
 }
 
 export interface FeatureUsageResult {
   success: boolean;
   featureId: string;
   amountUsed: number;
-  message?: string | null;
-  usage?: {
+  message: string | null;
+  usage: {
     current: number;
-    limit?: number | null;
-    remaining?: number | null;
+    limit: number | null;
+    remaining: number | null;
   } | null;
+  authoritativeAccess: FeatureAccess | null;
 }
 
-export interface ProfileResponse {
-  customerId?: string;
-  campaigns?: JsonValue;
-  segments?: JsonValue;
-  flows?: JsonValue;
-  features?: JsonValue;
-  [key: string]: JsonValue | undefined;
+export interface ExperienceRef {
+  experienceId: string;
+  experienceVersion: string | null;
+  journeyId: string | null;
 }
 
-export interface FlowPresentedEvent {
-  flowId: string;
+export interface AppAction {
+  name: string;
+  payload: Record<string, string | number | boolean> | null;
+  experience: ExperienceRef;
+}
+
+export interface NuxieActivityInfo {
+  schemaVersion: 1;
+  id: string;
   timestampMs: number;
-}
-
-export interface FlowDismissedEvent {
-  flowId?: string | null;
-  reason?: string | null;
-  journeyId?: string;
-  campaignId?: string | null;
-  screenId?: string | null;
-  error?: string | null;
-  timestampMs: number;
+  receivedAtMs: number;
+  name: string;
+  properties: Record<string, string | number | boolean>;
 }
 
 export interface NuxieNativeError {
@@ -213,52 +89,39 @@ export interface NuxieNativeError {
   nativeStack?: string;
 }
 
+/** Snake-case portable checkout request passed to a custom purchase controller. */
 export interface PurchaseRequest {
-  requestId: string;
+  request_id: string;
   platform: "ios" | "android";
-  productId: string;
-  basePlanId?: string | null;
-  offerId?: string | null;
-  displayName?: string | null;
-  displayPrice?: string | null;
-  price?: number | null;
-  currencyCode?: string | null;
-  timestampMs: number;
+  product_id: string;
+  store_product_id: string;
+  base_plan_id: string | null;
+  purchase_option_id: string | null;
+  offer_id: string | null;
+  placement_id: string | null;
+  display_name: string | null;
+  display_price: string | null;
+  timestamp_ms: number;
 }
 
 export interface RestoreRequest {
-  requestId: string;
+  request_id: string;
   platform: "ios" | "android";
-  timestampMs: number;
+  timestamp_ms: number;
 }
 
 export type PurchaseResult =
-  | {
-      type: "success";
-      productId?: string;
-      purchaseToken?: string;
-      orderId?: string;
-      transactionId?: string;
-      originalTransactionId?: string;
-      transactionJws?: string;
-    }
+  | { type: "purchased" }
   | { type: "cancelled" }
   | { type: "pending" }
   | { type: "failed"; message: string };
 
 export type RestoreResult =
-  | { type: "success"; restoredCount?: number }
+  | { type: "restored" }
   | { type: "no_purchases" }
   | { type: "failed"; message: string };
 
 export interface NuxiePurchaseController {
   onPurchase(request: PurchaseRequest): Promise<PurchaseResult>;
   onRestore(request: RestoreRequest): Promise<RestoreResult>;
-}
-
-export interface TriggerOperation {
-  requestId: string;
-  cancel(): Promise<void>;
-  onUpdate(listener: (update: TriggerUpdate) => void): () => void;
-  done: Promise<TriggerTerminalUpdate>;
 }

@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
   s.dependency "ExpoModulesCore"
-  s.dependency "Nuxie"
+  s.dependency "Nuxie", "0.1.0"
 
   s.swift_version = "5.9"
 end

@@ -21,60 +21,59 @@ await Nuxie.configure({
 
 ```ts
 await Nuxie.identify("user_123", {
-  userProperties: {
-    plan: "pro",
-    locale: "en_US",
-  },
+  userProperties: { plan: "pro", locale: "en_US" },
 });
 ```
 
-## 4. Trigger
+## 4. Capture an event
 
 ```ts
-const op = Nuxie.trigger("paywall_opened", {
-  properties: {
-    source: "settings",
-  },
-});
-
-op.onUpdate((update) => {
-  console.log(update);
-});
-
-const terminal = await op.done;
-console.log(terminal);
+Nuxie.trigger("paywall_opened", { source: "settings" });
 ```
 
-## 5. Feature Checks
+The event enters native delivery and ordered Journey evaluation. Any matching
+Journey runs asynchronously; `trigger` does not return a result.
+
+## 5. Observe native activity and App Actions
 
 ```ts
-const access = await Nuxie.hasFeature("pro_export");
+const stopActivity = Nuxie.on("activity", (activity) => {
+  analytics.track(activity.name, activity.properties);
+});
+
+const stopActions = Nuxie.on("appAction", (action) => {
+  if (action.name === "open_settings") {
+    navigation.openSettings(action.payload);
+  }
+});
+
+// Later:
+stopActivity();
+stopActions();
+```
+
+## 6. Check and use Features
+
+```ts
+const access = await Nuxie.hasFeature("ai_credits", {
+  requiredBalance: 2.5,
+  entityId: "project_123",
+  policy: "remote",
+});
 
 if (access.allowed) {
-  // allow feature
-}
-```
-
-For metered features:
-
-```ts
-const check = await Nuxie.checkFeature("ai_credits", {
-  requiredBalance: 5,
-  entityId: "project_123",
-});
-
-if (check.allowed) {
-  await Nuxie.useFeatureAndWait("ai_credits", {
-    amount: 5,
+  const usage = await Nuxie.useFeatureAndWait("ai_credits", {
+    amount: 2.5,
     entityId: "project_123",
   });
+  console.log(usage.authoritativeAccess);
 }
 ```
 
-## 6. Optional React Provider/Hooks
+## 7. Optional React provider and hook
 
 ```tsx
-import { NuxieProvider, useFeature, useTrigger } from "@nuxie/react-native";
+import { NuxieProvider, useFeature } from "@nuxie/react-native";
 
 function Root() {
   return (
@@ -85,14 +84,9 @@ function Root() {
 }
 
 function Screen() {
-  const feature = useFeature("pro_export");
-  const trigger = useTrigger();
+  const feature = useFeature("pro_export", { policy: "cacheFirst" });
   return null;
 }
 ```
 
-## Next
-
-- [Expo Setup](./expo-setup.md)
-- [Bare React Native Setup](./bare-react-native-setup.md)
-- [API Reference](./api-reference.md)
+Continue with [Expo Setup](./expo-setup.md), [Bare React Native Setup](./bare-react-native-setup.md), or the [API Reference](./api-reference.md).

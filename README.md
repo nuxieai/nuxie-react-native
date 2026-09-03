@@ -1,28 +1,136 @@
 # @nuxie/react-native
 
-React Native SDK for Nuxie.
+React Native bindings for the Nuxie iOS and Android SDKs. Journey execution,
+Experience presentation, Features, identity, and commerce stay native; this
+package supplies an Expo module plus a small TypeScript and React API.
 
-`@nuxie/react-native` is a thin, native-first bridge over:
+## Platform support
 
-- Nuxie iOS SDK (`nuxie-ios`)
-- Nuxie Android SDK (`nuxie-android`)
+| Runtime | Status |
+| --- | --- |
+| Expo development client / prebuild | Supported and recommended |
+| Bare React Native | Supported with native linkage |
+| Expo Go | Unsupported because the native module is required |
 
-It gives you an ergonomic React Native API while keeping runtime behavior in native SDKs.
+## Install
 
-## Why This SDK
+```bash
+bun add @nuxie/react-native
+```
 
-- Native truth: no duplicated trigger/feature/paywall runtime logic in JS.
-- Expo-first ergonomics: config plugin + Expo module bridge.
-- Bare RN support: same JS API, native linkage in your app.
-- Optional React layer: use imperative API only, or add provider/hooks.
+The package requires React 18+, React Native 0.72+, and Expo 50+.
 
-## Platform Support
+## Configure and capture events
 
-| Runtime | Status | Notes |
-| --- | --- | --- |
-| Expo Dev Client / Prebuild | Supported | Recommended path |
-| Bare React Native | Supported | Manual native setup required |
-| Expo Go | Not supported | Native bridge module is required |
+```ts
+import { Nuxie } from "@nuxie/react-native";
+
+await Nuxie.configure({
+  apiKey: "NX_PROD_...",
+  environment: "production",
+});
+
+await Nuxie.identify("user_123", {
+  userProperties: { plan: "pro" },
+});
+
+Nuxie.trigger("paywall_opened", { source: "settings" });
+```
+
+`trigger` is an event-only, fire-and-forget call. Matching Journeys run in
+native code and present Experiences when their authored program reaches a
+presentation step. Use `dismiss()` to close the active Experience.
+
+## Features
+
+```ts
+const access = await Nuxie.hasFeature("pro_export", {
+  requiredBalance: 1,
+  policy: "cacheFirst",
+});
+
+if (access.allowed) {
+  const result = await Nuxie.useFeatureAndWait("pro_export");
+  console.log(result.authoritativeAccess);
+}
+```
+
+Feature balances and usage amounts preserve fractional values. Set
+`policy: "remote"` when the operation requires a fresh authoritative check.
+
+## React API
+
+```tsx
+import { NuxieProvider, useFeature, useNuxieEvents } from "@nuxie/react-native";
+
+export function App() {
+  return (
+    <NuxieProvider config={{ apiKey: "NX_PROD_..." }}>
+      <Screen />
+    </NuxieProvider>
+  );
+}
+
+function Screen() {
+  const feature = useFeature("pro_export");
+
+  useNuxieEvents({
+    onActivity(activity) {
+      console.log(activity.name, activity.properties);
+    },
+    onAppAction(action) {
+      console.log(action.name, action.payload);
+    },
+  });
+
+  return null;
+}
+```
+
+## Expo plugin
+
+The optional config plugin stores a fallback API key in native app metadata:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      ["@nuxie/react-native/plugin", { "apiKey": "NX_PROD_..." }]
+    ]
+  }
+}
+```
+
+`configure()` resolves an explicit `apiKey` first, then the plugin value, and
+throws `MISSING_API_KEY` when neither exists.
+
+## Purchase controller
+
+Apps using a provider or custom billing stack can implement the portable
+controller. Requests use the canonical snake_case contract and results declare
+only the checkout outcome:
+
+```ts
+import type { NuxiePurchaseController } from "@nuxie/react-native";
+
+const purchaseController: NuxiePurchaseController = {
+  async onPurchase(request) {
+    const result = await billing.purchase(request.store_product_id);
+    if (result.cancelled) return { type: "cancelled" };
+    return result.completed
+      ? { type: "purchased" }
+      : { type: "failed", message: result.message };
+  },
+  async onRestore() {
+    return (await billing.restore())
+      ? { type: "restored" }
+      : { type: "no_purchases" };
+  },
+};
+```
+
+Set the controller before configuration or pass it to `NuxieProvider`. Native
+requests time out after 60 seconds.
 
 ## Documentation
 
@@ -33,188 +141,6 @@ It gives you an ergonomic React Native API while keeping runtime behavior in nat
 - [Purchase Controller Guide](./docs/purchase-controller.md)
 - [Troubleshooting](./docs/troubleshooting.md)
 
-## Install
-
-```bash
-bun add @nuxie/react-native
-```
-
-Peer requirements:
-
-- `react` >= 18
-- `react-native` >= 0.72
-- `expo` >= 50
-
-## Fast Start (Imperative API)
-
-```ts
-import { Nuxie } from "@nuxie/react-native";
-
-await Nuxie.configure({
-  apiKey: "NX_PROD_...", // optional when using plugin-provided NUXIE_API_KEY
-  environment: "production",
-});
-
-await Nuxie.identify("user_123", {
-  userProperties: { plan: "pro" },
-});
-
-const trigger = Nuxie.trigger("paywall_opened", {
-  properties: { source: "settings" },
-});
-
-trigger.onUpdate((update) => {
-  console.log("update", update);
-});
-
-const terminal = await trigger.done;
-console.log("terminal", terminal);
-```
-
-## Fast Start (React Layer)
-
-```tsx
-import { NuxieProvider, useFeature, useTrigger } from "@nuxie/react-native";
-
-export function App() {
-  return (
-    <NuxieProvider
-      config={{
-        apiKey: "NX_PROD_...",
-        environment: "production",
-      }}
-    >
-      <Screen />
-    </NuxieProvider>
-  );
-}
-
-function Screen() {
-  const feature = useFeature("pro_export", { refreshOnMount: true });
-  const trigger = useTrigger();
-
-  return null;
-}
-```
-
-## Expo Plugin (Optional API Key Fallback)
-
-```json
-{
-  "expo": {
-    "plugins": [
-      [
-        "@nuxie/react-native/plugin",
-        {
-          "apiKey": "NX_PROD_..."
-        }
-      ]
-    ]
-  }
-}
-```
-
-The plugin sets `NUXIE_API_KEY` in native config.
-
-The plugin does not currently add permission usage strings or dangerous
-permissions for flow-authored native permission actions. If your flows use
-`request_notifications`, `request_tracking`, or `request_permission(...)`, add
-the matching native config in your app project.
-
-`configure()` API key precedence:
-
-1. `options.apiKey`
-2. plugin-provided `NUXIE_API_KEY`
-3. throws `MISSING_API_KEY`
-
-## Trigger Contract
-
-`trigger()` returns a `TriggerOperation`:
-
-- `requestId`
-- `cancel()`
-- `onUpdate(listener)`
-- `done` promise (resolves only on terminal update)
-
-Terminal update categories:
-
-- `error`
-- `journey`
-- `decision` with: `no_match`, `suppressed`, `allowed_immediate`, `denied_immediate`
-- `entitlement` with: `allowed`, `denied`
-
-## Purchase Controller Bridge
-
-If your app owns purchase execution (RevenueCat, BillingClient wrapper, custom StoreKit flow), wire a `NuxiePurchaseController`:
-
-```ts
-import { NuxieProvider, type NuxiePurchaseController } from "@nuxie/react-native";
-
-const purchaseController: NuxiePurchaseController = {
-  async onPurchase(request) {
-    return {
-      type: "success",
-      productId: request.productId,
-      purchaseToken: "token_123",
-    };
-  },
-  async onRestore() {
-    return { type: "success", restoredCount: 1 };
-  },
-};
-
-<NuxieProvider
-  config={{ apiKey: "NX_PROD_...", usePurchaseController: true }}
-  purchaseController={purchaseController}
-/>;
-```
-
-Outstanding purchase/restore requests have a native timeout (60s).
-
-## Native Permission Action Setup
-
-These flow actions run entirely in the native SDKs, so no new JS API is
-required. Host apps still need the matching native declarations:
-
-- iOS:
-  - `NSUserTrackingUsageDescription` for `request_tracking`
-  - `NSCameraUsageDescription` for `request_permission("camera")`
-  - `NSMicrophoneUsageDescription` for `request_permission("microphone")`
-  - `NSPhotoLibraryUsageDescription` for `request_permission("photos")`
-  - `NSLocationWhenInUseUsageDescription` for
-    `request_permission("location")`
-- Android:
-  - `android.permission.POST_NOTIFICATIONS` for `request_notifications`
-  - `android.permission.CAMERA`
-  - `android.permission.RECORD_AUDIO`
-  - `android.permission.READ_MEDIA_IMAGES` on Android 13+ and
-    `android.permission.READ_EXTERNAL_STORAGE` on Android 12 and below
-  - `android.permission.ACCESS_COARSE_LOCATION` and/or
-    `android.permission.ACCESS_FINE_LOCATION`
-
-`request_notifications` uses the native Android notification permission path
-provided by `nuxie-android`, but Android 13+ apps still need
-`POST_NOTIFICATIONS` in the host manifest. `request_tracking` is iOS-only and
-should not be authored for Android apps.
-
-## Example App + Runability Verification
-
-A full Expo example app lives in [`example/`](./example):
-
-```bash
-cd example
-bun install
-bun run verify
-```
-
-`verify` checks:
-
-- SDK build
-- example TypeScript compile
-- Expo config resolution
-- Android prebuild generation
-- iOS prebuild generation
-
 ## Development
 
 ```bash
@@ -222,6 +148,9 @@ bun run typecheck
 bun test
 bun run build
 ```
+
+The full Expo example in [`example/`](./example) also verifies iOS and Android
+prebuild generation with `bun run verify`.
 
 ## License
 

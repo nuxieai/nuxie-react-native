@@ -9,136 +9,129 @@ import {
   NuxieProvider,
   useNuxieClient,
   useFeature,
-  useTrigger,
   useNuxieEvents,
 } from "@nuxie/react-native";
 ```
 
-## `Nuxie` / `NuxieClient`
+The package also exports the public configuration, Feature, activity,
+App Action, and purchase-controller types used below.
+
+## `Nuxie` and `NuxieClient`
+
+`Nuxie` is the shared client. Construct `NuxieClient` only when dependency
+injection or an isolated test client is useful.
 
 ### Lifecycle
 
 - `configure(options: NuxieConfigureOptions): Promise<void>`
 - `shutdown(): Promise<void>`
 
-#### `configure(options)` fields
-
-`NuxieConfigureOptions` extends `NuxieConfigurationOptions` and adds:
+Configuration fields:
 
 - `apiKey?: string`
+- `environment?: "production" | "development"`
+- `logLevel?: "verbose" | "debug" | "info" | "warning" | "error" | "none"`
+- `enableConsoleLogging?: boolean` (iOS)
+- `redactSensitiveData?: boolean` (iOS)
+- `localeIdentifier?: string | null`
+- `purchaseHandlingMode?: "full" | "observer"`
+- `testStoreEnabled?: boolean` (iOS development builds)
 - `usePurchaseController?: boolean`
 
-Commonly-used configuration fields:
-
-- `environment: "production" | "staging" | "development" | "custom"`
-- `apiEndpoint?: string`
-- `logLevel?: "verbose" | "debug" | "info" | "warning" | "error" | "none"`
-- `eventLinkingPolicy?: "keep_separate" | "migrate_on_identify"`
-- `localeIdentifier?: string | null`
-- `isDebugMode?: boolean`
-- queue and transport tuning:
-  - `flushAt`, `flushIntervalSeconds`, `eventBatchSize`, `maxQueueSize`
-  - `retryCount`, `retryDelaySeconds`, `requestTimeoutSeconds`
-
-Key behavior:
-
-1. explicit `options.apiKey`
-2. native `NUXIE_API_KEY` fallback
-3. throw `MISSING_API_KEY`
+An explicit API key wins over the native `NUXIE_API_KEY` value installed by
+the Expo plugin. Configuration throws `MISSING_API_KEY` if neither exists.
 
 ### Identity
 
-- `identify(distinctId: string, opts?): Promise<void>`
-- `reset(opts?: { keepAnonymousId?: boolean }): Promise<void>`
+- `identify(distinctId, options?): Promise<void>`
+- `reset(options?: { keepAnonymousId?: boolean }): Promise<void>`
 - `getDistinctId(): Promise<string>`
 - `getAnonymousId(): Promise<string>`
 - `isIdentified(): Promise<boolean>`
 
-### Triggers
+`identify` accepts `userProperties` and `userPropertiesSetOnce`. `reset`
+creates a fresh anonymous identity by default; pass `keepAnonymousId: true`
+only when the host deliberately wants to retain it.
 
-- `trigger(eventName: string, opts?: TriggerOptions): TriggerOperation`
-- `triggerOnce(eventName: string, opts?: TriggerOptions): Promise<TriggerTerminalUpdate>`
+### Events and presentation
 
-`TriggerOperation`:
+- `trigger(eventName, properties?): void`
+- `dismiss(): Promise<void>`
+- `setLocaleIdentifier(localeIdentifier): Promise<void>`
 
-- `requestId: string`
-- `cancel(): Promise<void>`
-- `onUpdate(listener): () => void`
-- `done: Promise<TriggerTerminalUpdate>`
+`trigger` captures an event. It has no operation handle, result stream,
+cancellation method, or Journey decision result. Native Journey execution
+continues asynchronously. Experiences can only be presented by that execution.
 
-### Flow + Profile
-
-- `showFlow(flowId: string): Promise<void>`
-- `refreshProfile(): Promise<ProfileResponse>`
+Changing locale updates cached settings and takes effect at the next launch or
+foreground profile synchronization.
 
 ### Features
 
-- `hasFeature(featureId, opts?): Promise<FeatureAccess>`
-- `getCachedFeature(featureId, opts?): Promise<FeatureAccess | null>`
-- `checkFeature(featureId, opts?): Promise<FeatureCheckResult>`
-- `refreshFeature(featureId, opts?): Promise<FeatureCheckResult>`
-- `useFeature(featureId, opts?): Promise<void>`
-- `useFeatureAndWait(featureId, opts?): Promise<FeatureUsageResult>`
+- `hasFeature(featureId, options?): Promise<FeatureAccess>`
+- `useFeature(featureId, options?): Promise<void>`
+- `useFeatureAndWait(featureId, options?): Promise<FeatureUsageResult>`
 
-### Event Queue
+`hasFeature` options:
 
-- `flushEvents(): Promise<boolean>`
-- `getQueuedEventCount(): Promise<number>`
-- `pauseEventQueue(): Promise<void>`
-- `resumeEventQueue(): Promise<void>`
+- `requiredBalance?: number`
+- `entityId?: string`
+- `policy?: "cacheFirst" | "remote"`
 
-### Event Subscription
+`useFeature` options:
 
-- `on(eventName, listener): () => void`
+- `amount?: number`
+- `entityId?: string`
+- `metadata?: Record<string, unknown>`
 
-Supported event names:
+`useFeatureAndWait` also accepts `setUsage?: boolean`. Its result preserves
+`authoritativeAccess`, including fractional balances, when native commerce
+returns an atomic post-use access snapshot.
 
-- `triggerUpdate`
+### Events
+
+Subscribe with `on(eventName, listener)` and call the returned function to
+unsubscribe. Event names are:
+
 - `featureAccessChanged`
+- `activity`
+- `appAction`
 - `purchaseRequest`
 - `restoreRequest`
-- `flowPresented`
-- `flowDismissed`
-
-Event payload type map:
 
 ```ts
 type NuxieClientEventMap = {
-  triggerUpdate: {
-    requestId: string;
-    update: TriggerUpdate;
-    isTerminal?: boolean;
-    timestampMs: number;
-  };
   featureAccessChanged: {
     featureId: string;
-    from?: FeatureAccess | null;
+    from: FeatureAccess | null;
     to: FeatureAccess;
     timestampMs: number;
   };
+  activity: NuxieActivityInfo;
+  appAction: AppAction;
   purchaseRequest: PurchaseRequest;
   restoreRequest: RestoreRequest;
-  flowPresented: {
-    flowId: string;
-    timestampMs: number;
-  };
-  flowDismissed: {
-    flowId?: string | null;
-    reason?: string | null;
-    journeyId?: string;
-    campaignId?: string | null;
-    screenId?: string | null;
-    error?: string | null;
-    timestampMs: number;
-  };
 };
 ```
 
-### Purchase Controller
+`NuxieActivityInfo` is the flat, analytics-ready native activity contract. It
+contains `schemaVersion`, stable event identity and timestamps, `name`, and
+snake_case scalar `properties`. Experiment exposure is emitted only after an
+authored variant becomes visible.
+
+`AppAction` contains the authored action `name`, scalar `payload`, and its
+`ExperienceRef` (`experienceId`, optional `experienceVersion`, optional
+`journeyId`).
+
+### Purchase controller
 
 - `setPurchaseController(controller: NuxiePurchaseController | null): void`
 
-## React Components/Hooks
+Purchase and restore requests use snake_case fields. Purchase results are
+`purchased`, `cancelled`, `pending`, or `failed`; restore results are
+`restored`, `no_purchases`, or `failed`.
+
+## React API
 
 ### `NuxieProvider`
 
@@ -151,69 +144,21 @@ Props:
 
 ### `useNuxieClient()`
 
-Returns active `NuxieClient` (context client or singleton `Nuxie`).
+Returns the provider client, or the shared `Nuxie` client outside a provider.
 
 ### `useFeature(featureId, options?)`
 
-`options`:
-
-- `requiredBalance?: number`
-- `entityId?: string`
-- `refreshOnMount?: boolean`
-
-Returns:
+Options are `requiredBalance`, `entityId`, and `policy`. The hook returns:
 
 - `value: FeatureAccess | null`
 - `isLoading: boolean`
 - `error: Error | null`
-- `refresh(): Promise<FeatureCheckResult>`
+- `refresh(): Promise<FeatureAccess>`
 
-### `useTrigger()`
-
-Returns:
-
-- `isRunning`
-- `lastUpdate`
-- `terminalUpdate`
-- `error`
-- `run(eventName, options?)`
-- `cancel()`
-
-`run(...)` automatically cancels any previous in-flight trigger started by the same hook instance.
+The initial check uses the selected policy; `refresh()` always performs a
+remote check. Native Feature-change callbacks update the hook value.
 
 ### `useNuxieEvents(callbacks)`
 
-Callback map:
-
-- `onTriggerUpdate`
-- `onFeatureAccessChanged`
-- `onPurchaseRequest`
-- `onRestoreRequest`
-- `onFlowPresented`
-- `onFlowDismissed`
-
-## Important Configure Behavior
-
-`NuxieConfigureOptions.apiKey` is optional only because native plugin fallback is supported.
-
-Resolution order:
-
-1. explicit `options.apiKey`
-2. native default key (`NUXIE_API_KEY`)
-3. throw `MISSING_API_KEY`
-
-## Trigger Terminal Semantics
-
-`TriggerOperation.done` resolves on terminal updates only:
-
-- `{ kind: "error" }`
-- `{ kind: "journey" }`
-- `{ kind: "decision", decision.type: "no_match" | "suppressed" | "allowed_immediate" | "denied_immediate" }`
-- `{ kind: "entitlement", entitlement.type: "allowed" | "denied" }`
-
-Not terminal:
-
-- `decision.journey_started`
-- `decision.journey_resumed`
-- `decision.flow_shown`
-- `entitlement.pending`
+Callbacks are `onFeatureAccessChanged`, `onActivity`, `onAppAction`,
+`onPurchaseRequest`, and `onRestoreRequest`.
