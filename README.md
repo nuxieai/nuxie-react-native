@@ -164,6 +164,8 @@ await nuxie.setLocaleIdentifier('fr-FR');
 await nuxie.setLocaleIdentifier(null); // Follow the device again.
 ```
 
+Locale changes withdraw the current profile until the next launch or foreground synchronization. Calling `identify` with the same stored customer ID does not force a refresh.
+
 Call `identify` when your app knows the customer and `reset` on sign-out. Do not reset in React effect cleanup. Set `keepAnonymousId: true` only when your identity policy intentionally retains it.
 
 ## Trigger an Experience
@@ -217,6 +219,8 @@ Your adapter maps its real outcomes to `purchased`, `cancelled`, `pending`, or `
 The separate native observer mode is `billing: { mode: 'native', handling: 'observer' }`. See [purchase controllers](docs/purchase-controller.md) for ownership and result details.
 
 ## Explore both example apps
+
+<img src="docs/assets/expo-ios-lab.png" alt="Expo SDK Lab running on iOS with live Feature state ready" width="280" />
 
 [`examples/bare`](examples/bare) and [`examples/expo`](examples/expo) run the same [SDK Lab](examples/shared/lab.tsx) through different native hosts. The Lab exercises configuration, identity, live Features, scoped checks, consumption and retries, Experience triggers, dismissal, restore, and activity.
 

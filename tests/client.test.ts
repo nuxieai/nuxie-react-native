@@ -138,3 +138,16 @@ test('a controller rejection becomes a failed native completion without leaking 
   await new Promise(resolve => setTimeout(resolve, 0));
   expect(native.calls.at(-1)?.args[2]).toBe('{"type":"failed","message":"External purchase controller failed"}');
 });
+
+test('an external completion from an old session cannot settle a new native request', async () => {
+  const { native, client } = harness();
+  const result = deferred<{ type: 'restored' }>();
+  await client.configure({ ...config, billing: { mode: 'external', controller: {
+    purchase: async () => ({ type: 'cancelled' }), restorePurchases: () => result.promise,
+  } } });
+  native.emit('restore', { requestId: 'old-restore' });
+  await client.shutdown(); await client.configure(config);
+  result.resolve({ type: 'restored' });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(native.calls.filter(c => c.method === 'completeRestore')).toHaveLength(0);
+});

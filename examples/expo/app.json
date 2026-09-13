@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "NuxieExpoLab",
+    "slug": "NuxieExpoLab",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "ai.nuxie.reactnative.expolab"
+    },
+    "android": {
+      "package": "ai.nuxie.reactnative.expolab"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

@@ -12,7 +12,7 @@ Import the client, hooks, and public types from `@nuxie/react-native`. [Type def
 | `identify(customerId, { properties?, propertiesSetOnce? })` | Changes identity through native. |
 | `reset({ keepAnonymousId? })` | Rotates anonymous identity unless explicitly retained. |
 | `getDistinctId()` / `getAnonymousId()` / `getIsIdentified()` | Async identity reads. |
-| `setLocaleIdentifier(localeOrNull)` | Sets locale; null restores device behavior. |
+| `setLocaleIdentifier(localeOrNull)` | Sets the locale for the next launch/foreground profile sync; null restores device behavior. Current profile authority is withdrawn until synchronization. |
 | `trigger(event, properties?)` | Acknowledges native invocation. |
 | `dismiss()` | Dismisses the presented Experience. |
 | `hasFeature(featureId, { requiredBalance?, entityId?, policy? })` | `Promise<FeatureAccess>`; cacheFirst is default. |
