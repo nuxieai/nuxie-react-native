@@ -1,8 +1,9 @@
-# Documentation Index
+# React Native SDK documentation
 
-- [Getting Started](./getting-started.md)
-- [Expo Setup](./expo-setup.md)
-- [Bare React Native Setup](./bare-react-native-setup.md)
-- [API Reference](./api-reference.md)
-- [Purchase Controller Guide](./purchase-controller.md)
-- [Troubleshooting](./troubleshooting.md)
+Start with the [README](../README.md), then use:
+
+- [API reference](api-reference.md) for the complete public surface.
+- [Purchase controllers](purchase-controller.md) for external billing ownership.
+- [Architecture](architecture.md) for lifecycle, bridge and packaging decisions.
+- [Development](development.md) for source builds, packed consumers and examples.
+- [Validation](validation.md) for actual qualification evidence and remaining limits.

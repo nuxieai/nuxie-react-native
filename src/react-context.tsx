@@ -1,93 +1,47 @@
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
-import type { ReactNode } from "react";
-import { NuxieClient } from "./client";
-import { Nuxie } from "./singleton";
-import type { NuxieConfigureOptions, NuxiePurchaseController } from "./types";
-
-interface NuxieContextValue {
-  client: NuxieClient;
-}
-
-const NuxieContext = createContext<NuxieContextValue | null>(null);
-
-export interface NuxieProviderProps {
-  children: ReactNode;
-  config?: NuxieConfigureOptions;
-  purchaseController?: NuxiePurchaseController | null;
+import { createContext, useContext, useEffect, useRef, useSyncExternalStore } from 'react';
+import type { PropsWithChildren } from 'react';
+import type { AppAction, FeatureSelection, NuxieActivity, NuxieClient, NuxieConfiguration } from './types';
+import { nuxie } from './singleton';
+const Context = createContext<NuxieClient>(nuxie);
+export interface NuxieProviderProps extends PropsWithChildren {
   client?: NuxieClient;
-  onConfigureError?: (error: unknown) => void;
+  configuration?: NuxieConfiguration;
+  onActivity?: (activity: NuxieActivity) => void;
+  onAppAction?: (action: AppAction) => void;
+  onError?: (error: Error) => void;
 }
-
-export function NuxieProvider({
-  children,
-  config,
-  purchaseController = null,
-  client = Nuxie,
-  onConfigureError,
-}: NuxieProviderProps): any {
-  const configureErrorRef = useRef(onConfigureError);
-  configureErrorRef.current = onConfigureError;
-  const stableConfig = useMemo<NuxieConfigureOptions | null>(() => {
-    if (config == null) {
-      return null;
-    }
-    return {
-      apiKey: config.apiKey,
-      environment: config.environment,
-      logLevel: config.logLevel,
-      enableConsoleLogging: config.enableConsoleLogging,
-      redactSensitiveData: config.redactSensitiveData,
-      localeIdentifier: config.localeIdentifier,
-      purchaseHandlingMode: config.purchaseHandlingMode,
-      testStoreEnabled: config.testStoreEnabled,
-      usePurchaseController: config.usePurchaseController,
-    };
-  }, [
-    config?.apiKey,
-    config?.environment,
-    config?.logLevel,
-    config?.enableConsoleLogging,
-    config?.redactSensitiveData,
-    config?.localeIdentifier,
-    config?.purchaseHandlingMode,
-    config?.testStoreEnabled,
-    config?.usePurchaseController,
-  ]);
-
+export function NuxieProvider({ client = nuxie, configuration, children, ...handlers }: NuxieProviderProps) {
+  const current = useRef(handlers); current.current = handlers;
   useEffect(() => {
-    client.setPurchaseController(purchaseController);
-    return () => {
-      if (purchaseController != null) {
-        client.setPurchaseController(null);
-      }
-    };
-  }, [client, purchaseController]);
-
+    const off = [client.onActivity(v => current.current.onActivity?.(v)),
+      client.onAppAction(v => current.current.onAppAction?.(v)), client.onError(v => current.current.onError?.(v))];
+    return () => off.forEach(unsubscribe => unsubscribe());
+  }, [client]);
   useEffect(() => {
-    if (stableConfig == null) {
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        await client.configure(stableConfig);
-      } catch (error) {
-        if (cancelled) {
-          return;
-        }
-        configureErrorRef.current?.(error);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [client, stableConfig]);
-
-  const value = useMemo<NuxieContextValue>(() => ({ client }), [client]);
-  return <NuxieContext.Provider value={value}>{children}</NuxieContext.Provider>;
+    let mounted = true;
+    if (configuration) void client.configure(configuration).catch(error => { if (mounted) { try { current.current.onError?.(error); } catch { /* Consumer error handler must not create an unhandled rejection. */ } } });
+    return () => { mounted = false; };
+  }, [client, configuration]);
+  return <Context.Provider value={client}>{children}</Context.Provider>;
 }
-
-export function useNuxieClient(): NuxieClient {
-  const ctx = useContext(NuxieContext) as NuxieContextValue | null;
-  return ctx?.client ?? Nuxie;
+export function useNuxie() { return useContext(Context); }
+export function useNuxieStatus() { const client = useNuxie(); return useSyncExternalStore(client.subscribeStatus, client.getStatus, client.getStatus); }
+export function useFeatures() { const client = useNuxie(); return useSyncExternalStore(client.subscribeFeatures, client.getFeatures, client.getFeatures); }
+export function useFeature(featureId: string): FeatureSelection {
+  const client = useNuxie();
+  const previous = useRef<FeatureSelection | null>(null);
+  const get = () => {
+    const snapshot = client.getFeatures(), access = Object.hasOwn(snapshot.all, featureId) ? snapshot.all[featureId] : null;
+    if (previous.current?.state !== snapshot.state || previous.current.access !== access) previous.current = Object.freeze({ state: snapshot.state, access });
+    return previous.current;
+  };
+  return useSyncExternalStore(client.subscribeFeatures, get, get);
+}
+export function useNuxieActivity(handler: (activity: NuxieActivity) => void) {
+  const client = useNuxie(), current = useRef(handler); current.current = handler;
+  useEffect(() => client.onActivity(value => current.current(value)), [client]);
+}
+export function useNuxieAppAction(handler: (action: AppAction) => void) {
+  const client = useNuxie(), current = useRef(handler); current.current = handler;
+  useEffect(() => client.onAppAction(value => current.current(value)), [client]);
 }

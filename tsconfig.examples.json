@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "examples/shared/**/*.ts",
+    "examples/shared/**/*.tsx",
+    "examples/bare/App.tsx",
+    "examples/expo/App.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "compilerOptions": {
+    "paths": {
+      "react-native-safe-area-context": [
+        "./examples/bare/node_modules/react-native-safe-area-context"
+      ]
+    }
+  }
+}

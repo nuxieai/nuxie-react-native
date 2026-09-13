@@ -15,25 +15,9 @@ final class NuxieDelegateBridge: NuxieDelegate {
     self.emit = emit
   }
 
-  func featureAccessDidChange(
-    _ featureId: String,
-    from oldValue: FeatureAccess?,
-    to newValue: FeatureAccess
-  ) {
-    emit(
-      "onFeatureAccessChanged",
-      [
-        "featureId": featureId,
-        "from": nuxieNullable(oldValue.map(featureAccessDictionary)),
-        "to": featureAccessDictionary(newValue),
-        "timestampMs": Int(Date().timeIntervalSince1970 * 1_000),
-      ]
-    )
-  }
-
   func nuxieDidEmit(_ info: NuxieActivityInfo) {
     emit(
-      "onActivity",
+      "activity",
       [
         "schemaVersion": NuxieActivityInfo.schemaVersion,
         "id": info.id,
@@ -47,7 +31,7 @@ final class NuxieDelegateBridge: NuxieDelegate {
 
   func nuxie(_ sdk: NuxieSDK, didRequestAppAction action: AppAction) {
     emit(
-      "onAppAction",
+      "appAction",
       [
         "name": action.name,
         "payload": nuxieNullable(action.payload?.mapValues(appActionValue)),

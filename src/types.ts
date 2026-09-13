@@ -1,127 +1,109 @@
-export type JsonPrimitive = string | number | boolean | null;
-export type JsonValue =
-  | JsonPrimitive
-  | JsonValue[]
-  | { [key: string]: JsonValue };
-
-export type EventProperties = Record<string, JsonValue>;
-export type NuxieLogLevel =
-  | "verbose"
-  | "debug"
-  | "info"
-  | "warning"
-  | "error"
-  | "none";
-export type NuxieEnvironment = "production" | "development";
-export type PurchaseHandlingMode = "full" | "observer";
-
-/** Customer-owned setup values shared by the native SDKs. */
-export interface NuxieConfigurationOptions {
-  environment?: NuxieEnvironment;
-  logLevel?: NuxieLogLevel;
-  enableConsoleLogging?: boolean;
-  redactSensitiveData?: boolean;
-  localeIdentifier?: string | null;
-  purchaseHandlingMode?: PurchaseHandlingMode;
-  /** iOS development builds only. Ignored on Android. */
-  testStoreEnabled?: boolean;
-}
-
-export interface NuxieConfigureOptions extends NuxieConfigurationOptions {
-  apiKey?: string;
-  usePurchaseController?: boolean;
-}
-
-export type FeatureCheckPolicy = "cacheFirst" | "remote";
-export type FeatureType = "boolean" | "metered" | "creditSystem";
-
+/** JSON values accepted by event properties and identity attributes. */
+export type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
+export type JsonObject = { readonly [key: string]: JsonValue };
+export type Unsubscribe = () => void;
+export type FeatureState = 'unknown' | 'reconciling' | 'ready';
 export interface FeatureAccess {
-  allowed: boolean;
-  unlimited: boolean;
-  balance: number | null;
-  type: FeatureType;
+  readonly allowed: boolean;
+  readonly unlimited: boolean;
+  readonly balance: number | null;
+  readonly type: 'boolean' | 'metered' | 'creditSystem';
 }
-
-export interface FeatureAccessChangedEvent {
-  featureId: string;
-  from: FeatureAccess | null;
-  to: FeatureAccess;
-  timestampMs: number;
+export interface FeatureSnapshot {
+  readonly state: FeatureState;
+  readonly all: Readonly<Record<string, FeatureAccess>>;
+  /** Native unsigned counters are decimal strings, preserving full precision. */
+  readonly identityGeneration: string;
+  readonly revision: string;
 }
-
-export interface FeatureUsageResult {
-  success: boolean;
-  featureId: string;
-  amountUsed: number;
-  message: string | null;
-  usage: {
-    current: number;
-    limit: number | null;
-    remaining: number | null;
+export interface FeatureSelection { readonly state: FeatureState; readonly access: FeatureAccess | null }
+export interface NuxieVersions { readonly wrapper: string; readonly native: string; readonly contract: number }
+export type NuxieStatus =
+  | { readonly state: 'unconfigured' | 'configuring' }
+  | { readonly state: 'configured'; readonly versions: NuxieVersions }
+  | { readonly state: 'failed'; readonly error: Error };
+export type PurchaseResult = { type: 'purchased' | 'cancelled' | 'pending' } | { type: 'failed'; message: string };
+export type RestoreResult = { type: 'restored' | 'noPurchases' } | { type: 'failed'; message: string };
+export interface StoreProduct {
+  readonly platform: 'ios' | 'android';
+  readonly productId: string;
+  readonly storeProductId: string;
+  readonly basePlanId: string | null;
+  readonly purchaseOptionId: string | null;
+  readonly offerId: string | null;
+  readonly placementId: string | null;
+  readonly displayName: string | null;
+  readonly description: string | null;
+  readonly displayPrice: string | null;
+  readonly productType: string | null;
+  readonly period: string | null;
+  readonly periodCount: number | null;
+  readonly billingPlan: string | null;
+  readonly eligibilityJws: string | null;
+  /** Selected Play subscription offer phases, in billing order. Null on iOS or one-time products. */
+  readonly pricingPhases: readonly { readonly displayPrice: string; readonly billingPeriod: string; readonly billingCycleCount: number; readonly recurrenceMode: number }[] | null;
+  readonly introductoryTerms: {
+    readonly price: string; readonly period: string; readonly periodCount: number;
+    readonly cycles: number; readonly paymentMode: string; readonly displayDuration: string;
   } | null;
-  authoritativeAccess: FeatureAccess | null;
 }
-
-export interface ExperienceRef {
-  experienceId: string;
-  experienceVersion: string | null;
-  journeyId: string | null;
+export interface PurchaseController {
+  purchase(product: StoreProduct): Promise<PurchaseResult>;
+  restorePurchases(): Promise<RestoreResult>;
 }
-
+export interface NuxieConfiguration {
+  readonly apiKeys: { readonly ios: string; readonly android: string };
+  readonly environment?: 'production' | 'development';
+  readonly logLevel?: 'verbose' | 'debug' | 'info' | 'warning' | 'error' | 'none';
+  readonly localeIdentifier?: string | null;
+  readonly billing?: { readonly mode: 'native'; readonly handling?: 'full' | 'observer' }
+    | { readonly mode: 'external'; readonly controller: PurchaseController };
+}
+export interface IdentifyOptions { readonly properties?: JsonObject; readonly propertiesSetOnce?: JsonObject }
+export interface FeatureCheckOptions {
+  readonly requiredBalance?: number;
+  readonly entityId?: string;
+  readonly policy?: 'cacheFirst' | 'remote';
+}
+export interface ConsumeFeatureOptions { readonly quantity: number; readonly operationId: string; readonly entityId?: string }
+export interface FeatureConsumption {
+  readonly accepted: boolean;
+  readonly operationId: string;
+  readonly quantity: number;
+  readonly code: string;
+  readonly idempotentReplay: boolean;
+  readonly balance: number | null;
+  readonly unlimited: boolean;
+  readonly active: boolean;
+}
+export interface NuxieActivity {
+  readonly schemaVersion: number; readonly id: string; readonly timestampMs: number;
+  readonly receivedAtMs: number; readonly name: string; readonly properties: JsonObject;
+}
 export interface AppAction {
-  name: string;
-  payload: Record<string, string | number | boolean> | null;
-  experience: ExperienceRef;
+  readonly name: string;
+  readonly payload: JsonObject | null;
+  readonly experience: { readonly experienceId: string; readonly experienceVersion: string | null; readonly journeyId: string | null };
 }
-
-export interface NuxieActivityInfo {
-  schemaVersion: 1;
-  id: string;
-  timestampMs: number;
-  receivedAtMs: number;
-  name: string;
-  properties: Record<string, string | number | boolean>;
-}
-
-export interface NuxieNativeError {
-  code: string;
-  message: string;
-  nativeStack?: string;
-}
-
-/** Snake-case portable checkout request passed to a custom purchase controller. */
-export interface PurchaseRequest {
-  request_id: string;
-  platform: "ios" | "android";
-  product_id: string;
-  store_product_id: string;
-  base_plan_id: string | null;
-  purchase_option_id: string | null;
-  offer_id: string | null;
-  placement_id: string | null;
-  display_name: string | null;
-  display_price: string | null;
-  timestamp_ms: number;
-}
-
-export interface RestoreRequest {
-  request_id: string;
-  platform: "ios" | "android";
-  timestamp_ms: number;
-}
-
-export type PurchaseResult =
-  | { type: "purchased" }
-  | { type: "cancelled" }
-  | { type: "pending" }
-  | { type: "failed"; message: string };
-
-export type RestoreResult =
-  | { type: "restored" }
-  | { type: "no_purchases" }
-  | { type: "failed"; message: string };
-
-export interface NuxiePurchaseController {
-  onPurchase(request: PurchaseRequest): Promise<PurchaseResult>;
-  onRestore(request: RestoreRequest): Promise<RestoreResult>;
+export interface NuxieClient {
+  configure(configuration: NuxieConfiguration): Promise<void>;
+  getStatus(): NuxieStatus;
+  subscribeStatus(listener: () => void): Unsubscribe;
+  getFeatures(): FeatureSnapshot;
+  subscribeFeatures(listener: () => void): Unsubscribe;
+  identify(customerId: string, options?: IdentifyOptions): Promise<void>;
+  reset(options?: { keepAnonymousId?: boolean }): Promise<void>;
+  getDistinctId(): Promise<string>;
+  getAnonymousId(): Promise<string>;
+  getIsIdentified(): Promise<boolean>;
+  setLocaleIdentifier(locale: string | null): Promise<void>;
+  trigger(event: string, properties?: JsonObject): Promise<void>;
+  dismiss(): Promise<void>;
+  hasFeature(featureId: string, options?: FeatureCheckOptions): Promise<FeatureAccess>;
+  consumeFeature(featureId: string, options: ConsumeFeatureOptions): Promise<FeatureConsumption>;
+  restorePurchases(): Promise<RestoreResult>;
+  onActivity(listener: (activity: NuxieActivity) => void): Unsubscribe;
+  onAppAction(listener: (action: AppAction) => void): Unsubscribe;
+  onError(listener: (error: Error) => void): Unsubscribe;
+  shutdown(): Promise<void>;
 }
