@@ -55,13 +55,13 @@ Enter development public keys in the Lab. Use a published trigger and Feature fr
 
 Connect with your development public keys, enter the Customer ID and a metered Feature ID, then supply two different entity IDs with positive grants for that customer. Tap **Run API checks · spend one unit**. The live activity log must finish with **API CHECKS PASSED**.
 
-The check identifies the customer, rejects an unknown entity, spends one unit from Entity A, retries the same operation ID, verifies exactly one debit and Entity B isolation, resets to an anonymous identity, and identifies the original customer again. Each new run creates a new command ID and spends one unit. Use disposable development grants. An exhausted or unscoped grant is a real failure, not something the example mocks or bypasses.
+The check changes and clears the locale, resets and identifies the customer to synchronize the profile, verifies live readiness and cache-first entity resolution, rejects an unknown entity, spends one unit from Entity A, retries the same operation ID, verifies exactly one debit and Entity B isolation, resets to an anonymous identity, and identifies the original customer again. Each new run creates a new command ID and spends one unit. Use disposable development grants. An exhausted or unscoped grant is a real failure, not something the example mocks or bypasses.
 
 The individual query and consumption controls remain useful for investigating failures and testing a chosen operation ID. The Experience section uses your authored trigger and exposes dismissal and restore; activity and App Actions are visible in the same log.
 
 ## Local backend
 
-Normal app code selects `environment: 'development'`. Endpoint overrides are debug-host-only diagnostics. iOS debug builds read `NUXIE_RN_API_ENDPOINT` from the process environment; Android debuggable builds read the launch Intent extra with that name. Production builds ignore these overrides. Use the checkout's `pnpm --ignore-workspace run dev:print` origin; Android emulators reach the host through `10.0.2.2`.
+Normal app code selects `environment: 'development'`. Endpoint overrides are debug-host-only diagnostics. iOS debug builds read `NUXIE_RN_API_ENDPOINT` from the process environment; Android debuggable builds read the launch Intent extra with that name. Production builds ignore these overrides. Use the parent Nuxie checkout's `pnpm run dev:print` origin; Android emulators reach the host through `10.0.2.2`.
 
 ## What to exercise
 
