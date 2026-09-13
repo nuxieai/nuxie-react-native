@@ -2,19 +2,18 @@ env:
   CI: "1"
 
 steps:
-  - label: ":react: React Native SDK and Expo example"
+  - label: ":react: React Native SDK, bare and Expo hosts"
     command: |
       set -euo pipefail
-      bun install
-      bun run typecheck
-      bun test
-      bun run build
-      cd example
-      bun install --frozen-lockfile
-      bun run verify
+      corepack pnpm --ignore-workspace install --frozen-lockfile
+      corepack pnpm --ignore-workspace run prepare:native
+      corepack pnpm --ignore-workspace run build
+      (cd examples/bare && corepack pnpm --ignore-workspace install --frozen-lockfile)
+      (cd examples/expo && corepack pnpm --ignore-workspace install --frozen-lockfile)
+      node scripts/check.mjs
     agents:
       queue: nuxie-pr
-      nuxie-platform: linux
+      nuxie-platform: macos
     timeout_in_minutes: 60
     retry:
       automatic:
