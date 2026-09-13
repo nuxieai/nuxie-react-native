@@ -4,3 +4,10 @@ build
 coverage
 *.log
 .DS_Store
+
+.native
+.build
+examples/.build
+*.tgz
+android/maven/
+examples/shared/local-defaults.json

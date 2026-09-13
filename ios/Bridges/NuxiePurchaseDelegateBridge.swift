@@ -21,24 +21,25 @@ final class NuxiePurchaseDelegateBridge: NuxiePurchaseDelegate, @unchecked Senda
   func purchase(product: StoreProduct) async -> PurchaseResult {
     let requestId = UUID().uuidString
     let payload: [String: Any] = [
-      "request_id": requestId,
-      "platform": "ios",
-      "product_id": product.productId,
-      "store_product_id": product.storeProductId,
-      "base_plan_id": NSNull(),
-      "purchase_option_id": NSNull(),
-      "offer_id": NSNull(),
-      "placement_id": product.placementId,
-      "display_name": product.name,
-      "display_price": product.price,
-      "timestamp_ms": Int(Date().timeIntervalSince1970 * 1_000),
+      "requestId": requestId,
+      "product": [
+        "platform": "ios", "productId": product.productId, "storeProductId": product.storeProductId,
+        "placementId": product.placementId, "displayName": product.name, "displayPrice": product.price,
+        "description": product.description, "productType": product.productType.rawValue,
+        "period": nuxieNullable(product.period?.rawValue), "periodCount": nuxieNullable(product.periodCount),
+        "eligibilityJws": nuxieNullable(product.introductoryOfferEligibilityJWS), "billingPlan": product.billingPlan.rawValue,
+        "introductoryTerms": nuxieNullable(product.introductoryTerms.map { terms in [
+          "price": terms.price, "period": terms.period.rawValue, "periodCount": terms.periodCount,
+          "cycles": terms.cycles, "paymentMode": terms.paymentMode.rawValue, "displayDuration": terms.trialPeriodText,
+        ] as [String: Any] }),
+      ] as [String: Any],
     ]
 
     return await withCheckedContinuation { continuation in
       lock.withLock {
         purchaseContinuations[requestId] = continuation
       }
-      emit("onPurchaseRequest", payload)
+      emit("purchase", payload)
       schedulePurchaseTimeout(requestId: requestId)
     }
   }
@@ -46,7 +47,7 @@ final class NuxiePurchaseDelegateBridge: NuxiePurchaseDelegate, @unchecked Senda
   func restorePurchases() async -> RestoreResult {
     let requestId = UUID().uuidString
     let payload: [String: Any] = [
-      "request_id": requestId,
+      "requestId": requestId,
       "platform": "ios",
       "timestamp_ms": Int(Date().timeIntervalSince1970 * 1_000),
     ]
@@ -55,7 +56,7 @@ final class NuxiePurchaseDelegateBridge: NuxiePurchaseDelegate, @unchecked Senda
       lock.withLock {
         restoreContinuations[requestId] = continuation
       }
-      emit("onRestoreRequest", payload)
+      emit("restore", payload)
       scheduleRestoreTimeout(requestId: requestId)
     }
   }
@@ -109,7 +110,7 @@ final class NuxiePurchaseDelegateBridge: NuxiePurchaseDelegate, @unchecked Senda
   }
 
   private func purchaseResult(from payload: [String: Any]) -> PurchaseResult {
-    switch (payload["type"] as? String)?.lowercased() {
+    switch (payload["type"] as? String) {
     case "purchased": .purchased
     case "cancelled": .cancelled
     case "pending": .pending
@@ -118,9 +119,9 @@ final class NuxiePurchaseDelegateBridge: NuxiePurchaseDelegate, @unchecked Senda
   }
 
   private func restoreResult(from payload: [String: Any]) -> RestoreResult {
-    switch (payload["type"] as? String)?.lowercased() {
+    switch (payload["type"] as? String) {
     case "restored": .restored
-    case "no_purchases": .noPurchases
+    case "noPurchases": .noPurchases
     default: .failed(bridgeError((payload["message"] as? String) ?? "restore_failed"))
     }
   }

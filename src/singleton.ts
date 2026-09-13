@@ -1,3 +1,3 @@
-import { NuxieClient } from "./client";
-
-export const Nuxie = new NuxieClient();
+import { createClient } from './client';
+import { loadNative } from './native-module';
+export const nuxie = createClient(loadNative);

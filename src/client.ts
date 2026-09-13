@@ -1,330 +1,198 @@
-import type {
-  AppAction,
-  EventProperties,
-  FeatureAccess,
-  FeatureAccessChangedEvent,
-  FeatureCheckPolicy,
-  FeatureUsageResult,
-  NuxieActivityInfo,
-  NuxieConfigureOptions,
-  NuxieConfigurationOptions,
-  NuxiePurchaseController,
-  PurchaseRequest,
-  RestoreRequest,
-} from "./types";
-import type {
-  NuxieNativeEventMap,
-  NuxieNativeEventName,
-  NuxieNativeModule,
-  NuxieNativeSubscription,
-} from "./native-module";
-import { resolveNativeModule } from "./native-module";
+import type { NativeBinding } from './native-module';
+import { NuxieError, asError } from './errors';
+import type { AppAction, FeatureAccess, FeatureSnapshot, NuxieActivity, NuxieClient, NuxieConfiguration, NuxieStatus, PurchaseController, Unsubscribe } from './types';
+import * as wire from './wire';
 
-const WRAPPER_VERSION = "0.1.0";
+const EMPTY = wire.frozen<FeatureSnapshot>({ state: 'unknown', all: {}, revision: '0', identityGeneration: '0' });
+const UNCONFIGURED = Object.freeze({ state: 'unconfigured' } as const);
 
-export interface NuxieClientEventMap {
-  featureAccessChanged: FeatureAccessChangedEvent;
-  activity: NuxieActivityInfo;
-  appAction: AppAction;
-  purchaseRequest: PurchaseRequest;
-  restoreRequest: RestoreRequest;
-}
-
-type ClientEventName = keyof NuxieClientEventMap;
-type ClientListenerMap = {
-  [K in ClientEventName]: Set<(payload: NuxieClientEventMap[K]) => void>;
-};
-type NuxieClientErrorCode = "MISSING_API_KEY";
-
-const CLIENT_TO_NATIVE_EVENT: Record<ClientEventName, NuxieNativeEventName> = {
-  featureAccessChanged: "onFeatureAccessChanged",
-  activity: "onActivity",
-  appAction: "onAppAction",
-  purchaseRequest: "onPurchaseRequest",
-  restoreRequest: "onRestoreRequest",
-};
-
-function createClientError(code: NuxieClientErrorCode, message: string): Error & { code: NuxieClientErrorCode } {
-  const error = new Error(message) as Error & { code: NuxieClientErrorCode };
-  error.code = code;
-  return error;
-}
-
-function toNativeConfiguration(options: NuxieConfigureOptions): NuxieConfigurationOptions {
-  const { apiKey: _apiKey, usePurchaseController: _usePurchaseController, ...configuration } = options;
-  return configuration;
-}
-
-export class NuxieClient {
-  private readonly moduleResolver: () => Promise<NuxieNativeModule>;
-  private modulePromise: Promise<NuxieNativeModule> | null = null;
-  private nativeModule: NuxieNativeModule | null = null;
-  private nativeSubscriptions = new Map<NuxieNativeEventName, NuxieNativeSubscription>();
-  private nativeSubscriptionPromises = new Map<NuxieNativeEventName, Promise<void>>();
-  private purchaseController: NuxiePurchaseController | null = null;
-  private configured = false;
-  private configuring = false;
-  private readonly listeners: ClientListenerMap = {
-    featureAccessChanged: new Set(),
-    activity: new Set(),
-    appAction: new Set(),
-    purchaseRequest: new Set(),
-    restoreRequest: new Set(),
-  };
-
-  constructor(moduleResolver: () => Promise<NuxieNativeModule> = resolveNativeModule) {
-    this.moduleResolver = moduleResolver;
+/** Internal factory: applications receive one process singleton or inject their own public client. */
+export function createClient(load: () => Promise<NativeBinding>): NuxieClient {
+  let binding: NativeBinding | undefined;
+  let status: NuxieStatus = UNCONFIGURED;
+  let features = EMPTY;
+  let session: string | undefined;
+  let configurationKey: string | undefined;
+  let controller: PurchaseController | undefined;
+  let setup: Promise<void> | undefined;
+  let stopping: Promise<void> | undefined;
+  let detach: Unsubscribe | undefined;
+  let epoch = 0;
+  let identityEpoch = 0;
+  const statuses = new Set<() => void>(), snapshots = new Set<() => void>();
+  const activities = new Set<(value: NuxieActivity) => void>(), actions = new Set<(value: AppAction) => void>();
+  const errors = new Set<(value: Error) => void>();
+  const commerceRequests = new Set<string>();
+  function report(error: unknown) { for (const listener of errors) { try { listener(asError(error)); } catch { /* Error reporting must not recurse. */ } } }
+  function notify<T>(listeners: Set<(value: T) => void>, value: T) {
+    for (const listener of [...listeners]) { try { listener(value); } catch (error) { report(error); } }
   }
-
-  get isConfigured(): boolean {
-    return this.configured;
+  function subscribe<T>(listeners: Set<T>, listener: T): Unsubscribe { listeners.add(listener); return () => { listeners.delete(listener); }; }
+  function setStatus(value: NuxieStatus) { status = Object.freeze(value); notify(statuses, undefined); }
+  function publish(next: FeatureSnapshot) {
+    const sameIdentity = next.identityGeneration === features.identityGeneration;
+    if (sameIdentity && BigInt(next.revision) < BigInt(features.revision)) return;
+    if (BigInt(next.identityGeneration) < BigInt(features.identityGeneration)) return;
+    const all = Object.fromEntries(Object.entries(next.all).map(([key, value]) => {
+      const previous = sameIdentity ? features.all[key] : undefined;
+      return [key, previous && sameAccess(previous, value) ? previous : value];
+    }));
+    if (sameIdentity && next.revision === features.revision && next.state === features.state &&
+      Object.keys(all).length === Object.keys(features.all).length && Object.entries(all).every(([k, v]) => v === features.all[k])) return;
+    features = wire.frozen({ ...next, all });
+    notify(snapshots, undefined);
   }
-
-  get isConfiguring(): boolean {
-    return this.configuring;
-  }
-
-  on<K extends ClientEventName>(
-    eventName: K,
-    listener: (payload: NuxieClientEventMap[K]) => void,
-  ): () => void {
-    this.listeners[eventName].add(listener);
-    void this.ensureNativeSubscription(CLIENT_TO_NATIVE_EVENT[eventName]);
-    return () => {
-      this.listeners[eventName].delete(listener);
-    };
-  }
-
-  setPurchaseController(controller: NuxiePurchaseController | null): void {
-    this.purchaseController = controller;
-    if (controller != null) {
-      void this.ensureNativeSubscription("onPurchaseRequest");
-      void this.ensureNativeSubscription("onRestoreRequest");
-    }
-  }
-
-  private async module(): Promise<NuxieNativeModule> {
-    if (this.nativeModule != null) {
-      return this.nativeModule;
-    }
-    if (this.modulePromise == null) {
-      this.modulePromise = this.moduleResolver();
-    }
-    const module = await this.modulePromise;
-    this.nativeModule = module;
-    return module;
-  }
-
-  private emit<K extends ClientEventName>(eventName: K, payload: NuxieClientEventMap[K]): void {
-    for (const listener of this.listeners[eventName]) {
-      listener(payload);
-    }
-  }
-
-  private async ensureNativeSubscription(eventName: NuxieNativeEventName): Promise<void> {
-    if (this.nativeSubscriptions.has(eventName)) {
-      return;
-    }
-    const pending = this.nativeSubscriptionPromises.get(eventName);
-    if (pending != null) {
-      await pending;
-      return;
-    }
-    const createPromise = (async () => {
-      const module = await this.module();
-      if (this.nativeSubscriptions.has(eventName)) {
-        return;
-      }
-      const subscription = module.addListener(eventName, (payload) => {
-        this.routeNativeEvent(eventName, payload);
-      });
-      this.nativeSubscriptions.set(eventName, subscription);
-    })();
-    this.nativeSubscriptionPromises.set(eventName, createPromise);
+  async function commerce(name: string, payload: Record<string, unknown>, attachedSession: string) {
+    const requestId = wire.string(payload.requestId), key = `${name}:${requestId}`;
+    if (commerceRequests.has(key)) return;
+    commerceRequests.add(key);
+    const captured = controller, module = binding?.module;
+    if (!module) return;
+    let result: unknown;
     try {
-      await createPromise;
-    } finally {
-      this.nativeSubscriptionPromises.delete(eventName);
-    }
-  }
-
-  private routeNativeEvent(eventName: NuxieNativeEventName, payload: NuxieNativeEventMap[NuxieNativeEventName]): void {
-    switch (eventName) {
-      case "onFeatureAccessChanged":
-        this.emit("featureAccessChanged", payload as NuxieNativeEventMap["onFeatureAccessChanged"]);
-        return;
-      case "onActivity":
-        this.emit("activity", payload as NuxieNativeEventMap["onActivity"]);
-        return;
-      case "onAppAction":
-        this.emit("appAction", payload as NuxieNativeEventMap["onAppAction"]);
-        return;
-      case "onPurchaseRequest": {
-        const request = payload as NuxieNativeEventMap["onPurchaseRequest"];
-        this.emit("purchaseRequest", request);
-        void this.handlePurchaseRequest(request);
-        return;
+      if (!captured) throw new Error('No external purchase controller is configured');
+      result = name === 'purchase' ? await captured.purchase(wire.product(payload.product)) : await captured.restorePurchases();
+      const outcome = wire.object(result);
+      if (name === 'restore') wire.restore(outcome);
+      else if (!['purchased', 'cancelled', 'pending'].includes(wire.string(outcome.type))) {
+        if (outcome.type !== 'failed') wire.invalid('Unknown purchase outcome');
+        wire.string(outcome.message);
       }
-      case "onRestoreRequest": {
-        const request = payload as NuxieNativeEventMap["onRestoreRequest"];
-        this.emit("restoreRequest", request);
-        void this.handleRestoreRequest(request);
-        return;
-      }
-    }
-  }
-
-  private async handlePurchaseRequest(payload: PurchaseRequest): Promise<void> {
-    const controller = this.purchaseController;
-    if (controller == null) {
-      return;
-    }
-    const module = await this.module();
+    } catch { result = { type: 'failed', message: 'External purchase controller failed' }; }
+    if (session !== attachedSession) return;
     try {
-      const result = await controller.onPurchase(payload);
-      await module.completePurchase(payload.request_id, result);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "purchase_failed";
-      await module.completePurchase(payload.request_id, { type: "failed", message });
-    }
+      if (name === 'purchase') await module.completePurchase(attachedSession, requestId, wire.json(result));
+      else await module.completeRestore(attachedSession, requestId, wire.json(result));
+    } catch (error) { report(error); }
   }
-
-  private async handleRestoreRequest(payload: RestoreRequest): Promise<void> {
-    const controller = this.purchaseController;
-    if (controller == null) {
-      return;
-    }
-    const module = await this.module();
+  function receive(raw: string, expectedSession: string) {
     try {
-      const result = await controller.onRestore(payload);
-      await module.completeRestore(payload.request_id, result);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "restore_failed";
-      await module.completeRestore(payload.request_id, { type: "failed", message });
-    }
+      const event = wire.parse(raw);
+      if (event.session !== expectedSession || session !== expectedSession) return;
+      switch (event.name) {
+        case 'features': publish(wire.snapshot(event.payload)); break;
+        case 'activity': notify(activities, wire.activity(event.payload)); break;
+        case 'appAction': notify(actions, wire.action(event.payload)); break;
+        case 'purchase': case 'restore': void commerce(event.name, wire.object(event.payload), expectedSession).catch(report); break;
+        default: wire.invalid('Unknown native event');
+      }
+    } catch (error) { report(error); }
   }
-
-  async configure(options: NuxieConfigureOptions): Promise<void> {
-    this.configuring = true;
+  function requireSession() {
+    if (!binding || !session || status.state !== 'configured' || stopping) throw new NuxieError('notConfigured', 'Await Nuxie configuration before calling this API');
+    return { module: binding.module, session, epoch, identityEpoch };
+  }
+  async function invoke<T>(operation: (context: ReturnType<typeof requireSession>) => Promise<T>, identitySensitive = false): Promise<T> {
+    const context = requireSession();
     try {
-      const module = await this.module();
-      const explicitApiKey = options.apiKey?.trim();
-      const defaultApiKey =
-        explicitApiKey == null || explicitApiKey.length === 0
-          ? await module.getDefaultApiKey().catch(() => null)
-          : null;
-      const apiKey = explicitApiKey && explicitApiKey.length > 0 ? explicitApiKey : defaultApiKey?.trim();
-      if (apiKey == null || apiKey.length === 0) {
-        throw createClientError(
-          "MISSING_API_KEY",
-          "Nuxie API key is required. Pass apiKey to configure() or set NUXIE_API_KEY via the Expo config plugin.",
-        );
+      const result = await operation(context);
+      if (context.epoch !== epoch || context.session !== session || (identitySensitive && context.identityEpoch !== identityEpoch)) {
+        throw new NuxieError('staleOperation', 'The SDK session or customer changed while this operation was pending');
       }
-
-      const usePurchaseController = options.usePurchaseController === true || this.purchaseController != null;
-      await module.configure(apiKey, toNativeConfiguration(options), usePurchaseController, WRAPPER_VERSION);
-      await Promise.all([
-        this.ensureNativeSubscription("onFeatureAccessChanged"),
-        this.ensureNativeSubscription("onActivity"),
-        this.ensureNativeSubscription("onAppAction"),
-      ]);
-      if (usePurchaseController) {
-        await Promise.all([
-          this.ensureNativeSubscription("onPurchaseRequest"),
-          this.ensureNativeSubscription("onRestoreRequest"),
-        ]);
-      }
-      this.configured = true;
-    } finally {
-      this.configuring = false;
-    }
+      return result;
+    } catch (error) { throw asError(error); }
   }
-
-  async shutdown(): Promise<void> {
-    const module = await this.module();
-    await module.shutdown();
-    this.configured = false;
-    this.configuring = false;
-    this.nativeSubscriptionPromises.clear();
-    for (const subscription of this.nativeSubscriptions.values()) {
-      subscription.remove();
-    }
-    this.nativeSubscriptions.clear();
-  }
-
-  async identify(
-    distinctId: string,
-    options?: {
-      userProperties?: Record<string, unknown>;
-      userPropertiesSetOnce?: Record<string, unknown>;
+  const client: NuxieClient = {
+    configure(configuration) {
+      try {
+        if (stopping) throw new NuxieError('shuttingDown', 'Await shutdown before configuring Nuxie');
+        const normalized = normalize(configuration);
+        const key = wire.json(normalized), nextController = configuration.billing?.mode === 'external' ? configuration.billing.controller : undefined;
+        if (configurationKey !== undefined) {
+          if (key !== configurationKey || nextController !== controller) throw new NuxieError('alreadyConfigured', 'Nuxie configuration cannot change without explicit shutdown');
+          return setup ?? Promise.resolve();
+        }
+        configurationKey = key; controller = nextController;
+        const current = ++epoch;
+        setup = Promise.resolve().then(async () => {
+          try {
+            binding = await load();
+            session = `rn-${Date.now()}-${current}-${Math.random().toString(36).slice(2)}`;
+            const attachedSession = session;
+            detach = binding.module.onEvent(raw => receive(raw, attachedSession)).remove;
+            const { apiKeys, ...options } = normalized;
+            const response = wire.parse(await binding.module.configure(wire.json({ ...options, contract: 1, session,
+              apiKey: apiKeys[binding.platform] })));
+            if (current !== epoch) throw new NuxieError('staleOperation', 'Configuration session was replaced');
+            if (response.contract !== 1 || response.session !== session) throw new NuxieError('incompatibleBridge', 'Nuxie JavaScript and native module differ. Rebuild the native app.');
+            publish(wire.snapshot(response.snapshot));
+            setStatus({ state: 'configured', versions: Object.freeze({ wrapper: '0.2.0', native: wire.string(response.nativeVersion), contract: 1 }) });
+          } catch (error) {
+            detach?.(); detach = undefined;
+            session = undefined; configurationKey = undefined; controller = undefined;
+            features = EMPTY; notify(snapshots, undefined);
+            const failure = asError(error); setStatus({ state: 'failed', error: failure });
+            throw failure;
+          } finally { if (current === epoch) setup = undefined; }
+        });
+        setStatus({ state: 'configuring' });
+        return setup;
+      } catch (error) { return Promise.reject(asError(error)); }
     },
-  ): Promise<void> {
-    const module = await this.module();
-    await module.identify(distinctId, options?.userProperties, options?.userPropertiesSetOnce);
-  }
-
-  async reset(options?: { keepAnonymousId?: boolean }): Promise<void> {
-    const module = await this.module();
-    await module.reset(options?.keepAnonymousId ?? false);
-  }
-
-  async getDistinctId(): Promise<string> {
-    return (await this.module()).getDistinctId();
-  }
-
-  async getAnonymousId(): Promise<string> {
-    return (await this.module()).getAnonymousId();
-  }
-
-  async isIdentified(): Promise<boolean> {
-    return (await this.module()).getIsIdentified();
-  }
-
-  /** Capture an event. Any matching Journey runs asynchronously in native code. */
-  trigger(eventName: string, properties?: EventProperties): void {
-    if (!this.configured || this.nativeModule == null) {
-      return;
-    }
-    this.nativeModule.trigger(eventName, properties);
-  }
-
-  async dismiss(): Promise<void> {
-    await (await this.module()).dismiss();
-  }
-
-  async setLocaleIdentifier(localeIdentifier: string | null): Promise<void> {
-    await (await this.module()).setLocaleIdentifier(localeIdentifier);
-  }
-
-  async hasFeature(
-    featureId: string,
-    options?: { requiredBalance?: number; entityId?: string; policy?: FeatureCheckPolicy },
-  ): Promise<FeatureAccess> {
-    return (await this.module()).hasFeature(
-      featureId,
-      options?.requiredBalance,
-      options?.entityId,
-      options?.policy,
-    );
-  }
-
-  async useFeature(
-    featureId: string,
-    options?: { amount?: number; entityId?: string; metadata?: Record<string, unknown> },
-  ): Promise<void> {
-    await (await this.module()).useFeature(featureId, options?.amount, options?.entityId, options?.metadata);
-  }
-
-  async useFeatureAndWait(
-    featureId: string,
-    options?: { amount?: number; entityId?: string; setUsage?: boolean; metadata?: Record<string, unknown> },
-  ): Promise<FeatureUsageResult> {
-    return (await this.module()).useFeatureAndWait(
-      featureId,
-      options?.amount,
-      options?.entityId,
-      options?.setUsage,
-      options?.metadata,
-    );
-  }
+    getStatus: () => status,
+    subscribeStatus: listener => subscribe(statuses, listener),
+    getFeatures: () => features,
+    subscribeFeatures: listener => subscribe(snapshots, listener),
+    async identify(customerId, options = {}) {
+      wire.text(customerId, 'customerId'); const properties = wire.json(options);
+      ++identityEpoch;
+      await invoke(c => c.module.identify(c.session, customerId, properties));
+    },
+    async reset(options = {}) { ++identityEpoch; await invoke(c => c.module.reset(c.session, options.keepAnonymousId ?? false)); },
+    getDistinctId: () => invoke(async c => wire.string(wire.parse(await c.module.getIdentity(c.session)).distinctId), true),
+    getAnonymousId: () => invoke(async c => wire.string(wire.parse(await c.module.getIdentity(c.session)).anonymousId), true),
+    getIsIdentified: () => invoke(async c => wire.bool(wire.parse(await c.module.getIdentity(c.session)).isIdentified), true),
+    async setLocaleIdentifier(locale) { if (locale !== null) wire.text(locale, 'locale'); await invoke(c => c.module.setLocaleIdentifier(c.session, locale)); },
+    async trigger(event, properties = {}) { wire.text(event, 'event'); const payload = wire.json(properties); await invoke(c => c.module.trigger(c.session, event, payload)); },
+    dismiss: () => invoke(c => c.module.dismiss(c.session)),
+    async hasFeature(featureId, options = {}) {
+      wire.text(featureId, 'featureId'); wire.positive(options.requiredBalance ?? 1);
+      if (options.entityId !== undefined) wire.text(options.entityId, 'entityId');
+      if (options.policy !== undefined && options.policy !== 'remote' && options.policy !== 'cacheFirst') throw new NuxieError('invalidArgument', 'Unknown Feature query policy');
+      return invoke(async c => wire.access(wire.parse(await c.module.hasFeature(c.session, featureId, wire.json(options)))), true);
+    },
+    async consumeFeature(featureId, options) {
+      wire.text(featureId, 'featureId'); wire.text(options.operationId, 'operationId'); wire.positive(options.quantity);
+      if (options.entityId !== undefined) wire.text(options.entityId, 'entityId');
+      return invoke(async c => {
+        const v = wire.parse(await c.module.consumeFeature(c.session, featureId, wire.json(options)));
+        const result = { accepted: wire.bool(v.accepted), operationId: wire.string(v.operationId),
+          quantity: wire.number(v.quantity), code: wire.string(v.code), idempotentReplay: wire.bool(v.idempotentReplay), balance: wire.nullable(v.balance, wire.number), unlimited: wire.bool(v.unlimited), active: wire.bool(v.active) };
+        if (result.operationId !== options.operationId || result.quantity !== options.quantity) wire.invalid('Consumption receipt does not match the command');
+        return wire.frozen(result);
+      }, true);
+    },
+    restorePurchases: () => invoke(async c => wire.restore(wire.parse(await c.module.restorePurchases(c.session))), true),
+    onActivity: listener => subscribe(activities, listener),
+    onAppAction: listener => subscribe(actions, listener),
+    onError: listener => subscribe(errors, listener),
+    shutdown() {
+      if (stopping) return stopping;
+      stopping = (async () => {
+        await Promise.resolve();
+        try {
+          if (setup) { try { await setup; } catch { /* Failed setup has no active attachment. */ } }
+          if (binding && session) await binding.module.shutdown(session);
+          ++epoch; ++identityEpoch;
+          detach?.(); detach = undefined; session = undefined; controller = undefined; configurationKey = undefined;
+          commerceRequests.clear(); features = EMPTY; notify(snapshots, undefined); setStatus(UNCONFIGURED);
+        } catch (error) { throw asError(error); }
+        finally { stopping = undefined; }
+      })();
+      return stopping;
+    },
+  };
+  return Object.freeze(client);
+}
+function sameAccess(a: FeatureAccess, b: FeatureAccess) { return a.allowed === b.allowed && a.unlimited === b.unlimited && a.balance === b.balance && a.type === b.type; }
+function normalize(config: NuxieConfiguration) {
+  const environment = config.environment ?? 'production', logLevel = config.logLevel ?? 'warning';
+  if (!['production', 'development'].includes(environment) || !['verbose', 'debug', 'info', 'warning', 'error', 'none'].includes(logLevel)) throw new NuxieError('invalidArgument', 'Invalid environment or log level');
+  if (config.billing && !['native', 'external'].includes(config.billing.mode)) throw new NuxieError('invalidArgument', 'Invalid billing mode');
+  if (config.billing?.mode === 'external' && (typeof config.billing.controller?.purchase !== 'function' || typeof config.billing.controller?.restorePurchases !== 'function')) throw new NuxieError('invalidArgument', 'External billing requires purchase and restorePurchases functions');
+  if (config.billing?.mode === 'native' && config.billing.handling !== undefined && !['full', 'observer'].includes(config.billing.handling)) throw new NuxieError('invalidArgument', 'Unknown native purchase handling mode');
+  if (config.localeIdentifier != null) wire.text(config.localeIdentifier, 'localeIdentifier');
+  return { apiKeys: { ios: wire.text(config.apiKeys.ios, 'iOS API key'), android: wire.text(config.apiKeys.android, 'Android API key') },
+    environment, logLevel, localeIdentifier: config.localeIdentifier ?? null,
+    purchaseHandlingMode: config.billing?.mode === 'native' ? config.billing.handling ?? 'full' : 'full', externalBilling: config.billing?.mode === 'external' };
 }

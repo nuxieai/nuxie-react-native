@@ -1,84 +1,35 @@
-# Purchase Controller Guide
+# Purchase controllers
 
-Use a purchase controller when the host app or a billing provider owns
-checkout. Nuxie still chooses the exact product shown by the Experience and
-waits for the host's outcome declaration.
-
-## Interface
+Use native billing unless your application already owns a purchase-provider integration. External billing is a configuration-time commitment; provider unmount does not revoke it.
 
 ```ts
-type NuxiePurchaseController = {
-  onPurchase(request: PurchaseRequest): Promise<PurchaseResult>;
-  onRestore(request: RestoreRequest): Promise<RestoreResult>;
-};
-```
+import type { PurchaseController, PurchaseResult, RestoreResult } from '@nuxie/react-native';
 
-Requests use canonical snake_case fields. In particular, read
-`request.request_id`, `request.product_id`, `request.store_product_id`, and the
-optional Play plan and offer identifiers.
-
-Purchase results:
-
-- `{ type: "purchased" }`
-- `{ type: "cancelled" }`
-- `{ type: "pending" }`
-- `{ type: "failed", message: string }`
-
-Restore results:
-
-- `{ type: "restored" }`
-- `{ type: "no_purchases" }`
-- `{ type: "failed", message: string }`
-
-## Wiring
-
-```ts
-Nuxie.setPurchaseController(controller);
-await Nuxie.configure({
-  apiKey: "NX_PROD_...",
-  usePurchaseController: true,
-  purchaseHandlingMode: "observer",
-});
-```
-
-Or pass the controller to `NuxieProvider`:
-
-```tsx
-<NuxieProvider
-  config={{ apiKey: "NX_PROD_...", usePurchaseController: true }}
-  purchaseController={controller}
->
-  <App />
-</NuxieProvider>
-```
-
-## Example
-
-```ts
-const controller: NuxiePurchaseController = {
-  async onPurchase(request) {
-    try {
-      const result = await myBilling.purchase(request.store_product_id);
-      if (result.status === "cancelled") return { type: "cancelled" };
-      if (result.status === "pending") return { type: "pending" };
-      return result.status === "purchased"
-        ? { type: "purchased" }
-        : { type: "failed", message: result.message ?? "purchase_failed" };
-    } catch (error) {
-      return {
-        type: "failed",
-        message: error instanceof Error ? error.message : "purchase_failed",
-      };
-    }
+const controller: PurchaseController = {
+  async purchase(product): Promise<PurchaseResult> {
+    return billingAdapter.purchaseExactOffer(product);
   },
-
-  async onRestore() {
-    const restored = await myBilling.restore();
-    return restored ? { type: "restored" } : { type: "no_purchases" };
+  async restorePurchases(): Promise<RestoreResult> {
+    return billingAdapter.restore();
   },
 };
+
+await nuxie.configure({ apiKeys, billing: { mode: 'external', controller } });
 ```
 
-Native requests fail after 60 seconds if the controller does not return.
-Always settle each request exactly once and preserve pending checkout as
-`pending` instead of guessing success or failure.
+`billingAdapter`, `apiKeys`, and the configured `nuxie` import belong to the host. Map the provider's actual outcome:
+
+| Purchase | Restore |
+| --- | --- |
+| `{ type: 'purchased' }` | `{ type: 'restored' }` |
+| `{ type: 'cancelled' }` | `{ type: 'noPurchases' }` |
+| `{ type: 'pending' }` | `{ type: 'failed', message }` |
+| `{ type: 'failed', message }` | |
+
+The `StoreProduct` includes Nuxie and store product IDs, platform, selected base plan, purchase option, offer, placement, available display terms, and iOS introductory eligibility JWS. Fields unavailable on a platform are null. Resolve the exact selected offer with your provider. If the provider cannot express it, return a failure instead of buying another offer.
+
+Cancellation, pending approval, and failure are distinct. A successful external response does not manufacture a receipt or grant Features. Observe the native Feature projection for access.
+
+The wrapper keeps transport IDs private and completes each request at most once. Native watchdogs fail abandoned requests; invalidation/shutdown cancels pending JavaScript callbacks. Late results cannot settle requests in a different runtime session. Application exceptions become failed purchase/restore results.
+
+With native billing, `handling: 'full'` delegates purchase completion to Nuxie. `handling: 'observer'` leaves native transaction completion with the host. This is separate from selecting an external JavaScript controller.
