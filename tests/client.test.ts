@@ -81,6 +81,20 @@ describe('Feature authority', () => {
   });
 });
 describe('events and commerce', () => {
+  test('App Actions preserve authored payload and context, fence sessions, and unsubscribe', async () => {
+    const { native, client } = harness(); await client.configure(config);
+    const action = { name: 'sdk_lab_continue', payload: { source: 'authored_experience' },
+      experience: { experienceId: 'experience-1', experienceVersion: 'version-2', journeyId: 'journey-3' } };
+    const received: unknown[] = [];
+    const unsubscribe = client.onAppAction(value => received.push(value));
+    native.emit('appAction', action, 'retired-session');
+    expect(received).toEqual([]);
+    native.emit('appAction', action);
+    expect(received).toEqual([action]);
+    expect(Object.isFrozen(received[0])).toBe(true);
+    unsubscribe(); native.emit('appAction', action);
+    expect(received).toHaveLength(1);
+  });
   test('one throwing observer does not prevent other observers receiving activity', async () => {
     const { native, client } = harness(); await client.configure(config);
     let received = 0, errors = 0;
