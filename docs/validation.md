@@ -27,13 +27,14 @@ An Expo iOS JavaScript reload reattached successfully: Feature state remained re
 
 The bare React Native host also produced an unsigned iOS device archive with Release configuration, confirming device linkage and bundled JavaScript.
 
-The authored Experience rendered in Expo on iOS and Android and in bare React Native on Android, with native `journey_started`, `screen_shown`, and `experience_shown` activity delivered to JavaScript. Android bare-host `dismiss()` before Continue resolved and delivered `journey_completed` and `experience_dismissed`. The real compiler produced the content-addressed Rive artifact; no native presentation or backend response was mocked.
+The authored Experience rendered in both Expo and bare React Native on iOS and Android, with native `journey_started`, `screen_shown`, and `experience_shown` activity delivered to JavaScript. Android bare-host `dismiss()` before Continue resolved and delivered `journey_completed` and `experience_dismissed`. The real compiler produced the content-addressed Rive artifact; no native presentation or backend response was mocked.
 
 The local authoring setup required one project per platform. Republishing a project against another platform exposed [UNIV-3144](https://universe.basis.dev/issue/UNIV-3144), tracked separately from the SDK.
 
-## Qualification in progress
+A clean Expo prebuild and the source-checkout native readiness gate passed for both hosts on both platforms. The final iOS pin includes `0524e1bc`, which fixes acknowledgement of host dismissal after a Journey has retired; its native lifecycle regression and native SDK readiness gate passed. See [UNIV-3145](https://universe.basis.dev/issue/UNIV-3145).
 
-- Complete clean Expo prebuild and the final source-checkout readiness gate.
-- Complete App Action and post-completion dismissal checks.
+## Remaining qualification
+
+The attended React Native App Action button interaction and subsequent dismissal have not been completed: the simulator UI automation service stopped accepting window actions. The JavaScript regression suite separately verifies authored App Action payload/context delivery, session fencing, and unsubscribe behavior; that is not a substitute for a live tap. Android dismissal after completion took about 107 seconds in the separate Flutter/native qualification and remains a performance concern.
 
 Store-sandbox purchase/restore flows, physical-device testing, EAS cloud builds, and npm publication have not been performed by this qualification run.
