@@ -2,3 +2,5 @@ source 'https://rubygems.org'
 
 ruby '>= 3.2'
 gem 'cocoapods', '1.17.0'
+# ActiveSupport 7.2's encoder passes options removed by JSON 3.
+gem 'json', '< 3'

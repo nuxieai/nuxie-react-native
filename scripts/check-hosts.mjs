@@ -7,6 +7,7 @@ const env = {
   BUNDLE_GEMFILE: `${root}/examples/bare/Gemfile`,
   BUNDLE_PATH: `${root}/.build/gems`,
   BUNDLE_FROZEN: 'true',
+  BUNDLE_IGNORE_CONFIG: 'true',
 };
 function run(command, args, cwd) {
   console.log(`> ${command} ${args.join(' ')}`);
