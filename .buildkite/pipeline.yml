@@ -1,5 +1,7 @@
 env:
   CI: "1"
+  LANG: "en_US.UTF-8"
+  LC_ALL: "en_US.UTF-8"
 
 steps:
   - label: ":react: React Native SDK, bare and Expo hosts"
