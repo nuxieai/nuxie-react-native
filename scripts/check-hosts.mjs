@@ -5,6 +5,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 function run(command, args, cwd) {
   console.log(`> ${command} ${args.join(' ')}`);
   const child = spawnSync(command, args, { cwd, stdio: 'inherit', env: process.env });
+  if (child.error) throw child.error;
   if (child.status !== 0) process.exit(child.status ?? 1);
 }
 for (const [host, scheme] of [['bare', 'NuxieBare'], ['expo', 'NuxieExpoLab']]) {
