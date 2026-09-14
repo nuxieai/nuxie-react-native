@@ -1,6 +1,8 @@
 # Build and run the SDK
 
-Use Node 24 LTS, pnpm 11, Bun, Xcode with CocoaPods, and JDK 17 with an Android SDK/NDK. The example locks record exact React Native and Expo dependencies.
+Use Node 24 LTS, pnpm 11, Bun, Xcode 26.4 or newer, Ruby 3.2 or newer with Bundler, and JDK 17 with an Android SDK/NDK. [Expo 57 requires Xcode 26.4+](https://docs.expo.dev/versions/latest/). The example locks record exact React Native, Expo, and CocoaPods dependencies.
+
+After installing the SDK and both examples' JavaScript dependencies and preparing the native package, run `node scripts/check.mjs` for full qualification. It installs the frozen gems from `examples/bare/Gemfile.lock` into `.build/gems`, then builds both hosts for iOS and Android. Use a UTF-8 locale and set `ANDROID_HOME` to your Android SDK. CI selects the side-by-side Xcode 26.5 installation at `~/Applications/Xcode-26.5.app` through `DEVELOPER_DIR`.
 
 ## Prepare a package
 
