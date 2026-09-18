@@ -2,9 +2,20 @@
 
 This file records actual evidence. A build proves compilation and linkage; it does not prove store checkout or backend commerce.
 
-## Video delivery candidate — September 18, 2026
+## Native video fix refresh — September 18, 2026
 
-The video candidate pins iOS `38428e8bb1c65605d6c982ff22b2a18d63229950`
+Current pins are iOS `62001e47` and Android `1514b1c`, both pushed development
+commits. They include production shared decoder pools and hidden-screen
+retirement/suspension fixes. `python3 scripts/prepare-native.py` and
+`node scripts/check-package.mjs` passed after this refresh, including the exact
+Android artifact digest, 16 KiB alignment, and 77-file package inventory.
+The iOS bare-example SwiftPM lock now names the new revision. Fresh native
+example builds and signed-video playback remain outstanding for these pins;
+the broader build evidence below belongs to the earlier revisions.
+
+## Earlier video delivery candidate — September 18, 2026
+
+The earlier video candidate pinned iOS `38428e8bb1c65605d6c982ff22b2a18d63229950`
 and Android `e76714a76e14b8f293e782934c107a789d0a67f0`. These are pushed
 development commits, pending native SDK review and final qualification under
 [UNIV-3262](https://universe.basis.dev/issue/UNIV-3262).
