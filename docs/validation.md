@@ -2,7 +2,26 @@
 
 This file records actual evidence. A build proves compilation and linkage; it does not prove store checkout or backend commerce.
 
-## Current development matrix
+## Video delivery candidate — September 18, 2026
+
+The video candidate pins iOS `38428e8bb1c65605d6c982ff22b2a18d63229950`
+and Android `e76714a76e14b8f293e782934c107a789d0a67f0`. These are pushed
+development commits, pending native SDK review and final qualification under
+[UNIV-3262](https://universe.basis.dev/issue/UNIV-3262).
+
+The Android preparation script builds this exact SDK revision into the packaged
+Maven artifact. Release-variant registration belongs to the native SDK; the
+wrapper adds its pinned publication without registering the variant again.
+
+At these pins, `prepare:native`, `lint`, `typecheck`, `typecheck:examples`, `test`
+(19 passing tests), `build`, and `check:package` passed. Package verification
+checked the native digest, both 64-bit ABIs, ELF 16 KiB alignment, and the npm
+file inventory. The bare Android host's `:app:assembleDebug` passed.
+These checks do not establish video playback through a React Native or Expo
+host. iOS host builds, Expo host builds, and signed-video device qualification
+remain outstanding at these pins.
+
+## September 13 development matrix
 
 | Host | iOS simulator debug build | Android debug / release APK |
 | --- | --- | --- |

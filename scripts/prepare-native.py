@@ -23,7 +23,6 @@ init.write_text('''allprojects { project ->
   if (project.name == 'nuxie-android') {
     project.pluginManager.withPlugin('com.android.library') {
       project.pluginManager.apply('maven-publish')
-      project.android.publishing { singleVariant('release') }
       project.afterEvaluate {
         project.publishing {
           publications {
