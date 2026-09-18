@@ -4,14 +4,19 @@ This file records actual evidence. A build proves compilation and linkage; it do
 
 ## Native video fix refresh — September 18, 2026
 
-Current pins are iOS `62001e47` and Android `1514b1c`, both pushed development
-commits. They include production shared decoder pools and hidden-screen
-retirement/suspension fixes. `python3 scripts/prepare-native.py` and
-`node scripts/check-package.mjs` passed after this refresh, including the exact
+Current pins are iOS `858321e2` and Android `1514b1c`, both pushed development
+commits. They include production shared decoder pools, hidden-screen
+retirement/suspension, and the iOS content-addressed-video format fix. The
+Android revision is unchanged from the previous native preparation.
+`node scripts/check-package.mjs` passed after this iOS refresh, including the exact
 Android artifact digest, 16 KiB alignment, and 77-file package inventory.
-The iOS bare-example SwiftPM lock now names the new revision. Fresh native
-example builds and signed-video playback remain outstanding for these pins;
-the broader build evidence below belongs to the earlier revisions.
+The iOS bare-example SwiftPM lock now names the new revision. The bare host passed its arm64 iOS simulator Debug build and Android
+`:app:assembleDebug`. The first Android attempt found an older Maven artifact
+in the installed file dependency; reinstalling the local package with
+`pnpm --ignore-workspace install --force --offline` restored the current pinned
+artifact, and the build passed. Expo prebuild, pod installation, and the arm64 iOS simulator Debug build also
+passed with iOS `858321e2`. Its Android build and signed-video playback remain
+outstanding; the broader evidence below belongs to earlier revisions.
 
 ## Earlier video delivery candidate — September 18, 2026
 
