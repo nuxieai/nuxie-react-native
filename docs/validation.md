@@ -1,10 +1,18 @@
 # SDK qualification
 
+## Current native pins
+
+iOS `95d76d41eb4cc945cb57e5c1bcd8333ed15d55cc` and Android `4d65783e2eec5b585673041146dff887258d3c93` include
+published Apple runtime 0.10.8 and Android runtime 0.4.8, rendered-video visibility,
+and interruption recovery fixes. Native preparation, wrapper builds, playback,
+and final readiness for these revisions remain pending. Results below identify
+the earlier revisions they qualified.
+
 This file records actual evidence. A build proves compilation and linkage; it does not prove store checkout or backend commerce.
 
 ## Native video fix refresh — September 18, 2026
 
-Current pins are iOS `858321e2` and Android `1514b1c`, both pushed development
+The preceding qualification used iOS `858321e2` and Android `1514b1c`, both pushed development
 commits. They include production shared decoder pools, hidden-screen
 retirement/suspension, and the iOS content-addressed-video format fix. The
 Android revision is unchanged from the previous native preparation.
