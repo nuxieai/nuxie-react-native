@@ -7,8 +7,10 @@ published Apple runtime 0.10.8 and Android runtime 0.4.8, rendered-video visibil
 and interruption recovery fixes. `python3 scripts/prepare-native.py` rebuilt the
 pinned Android Maven artifact, and `node scripts/check-package.mjs` passed exports,
 server import, plugin, native digest, 16 KiB alignment and the 77-file package
-inventory checks. Refreshed iOS and example builds, playback, and final readiness
-remain pending. Results below identify the earlier revisions they qualified.
+inventory checks. Lint, SDK and example typechecks, all 19 JavaScript tests, and
+the package build passed at these pins. Refreshed iOS and example builds,
+playback, and final readiness remain pending. Results below identify the earlier
+revisions they qualified.
 
 This file records actual evidence. A build proves compilation and linkage; it does not prove store checkout or backend commerce.
 
