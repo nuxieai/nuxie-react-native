@@ -8,8 +8,12 @@ and interruption recovery fixes. `python3 scripts/prepare-native.py` rebuilt the
 pinned Android Maven artifact, and `node scripts/check-package.mjs` passed exports,
 server import, plugin, native digest, 16 KiB alignment and the 77-file package
 inventory checks. Lint, SDK and example typechecks, all 19 JavaScript tests, and
-the package build passed at these pins. Refreshed iOS and example builds,
-playback, and final readiness remain pending. Results below identify the earlier
+the package build passed at these pins. Bare React Native and Expo each passed
+the arm64 iOS simulator build and Android Debug assembly. Both example packages
+were refreshed from the prepared package, and their Android AAR digests match
+the pinned artifact. The bare SwiftPM lock resolved the exact iOS pin; the first
+readiness run rejected this generated change after all checks passed. Refreshed
+playback and final readiness remain pending. Results below identify the earlier
 revisions they qualified.
 
 This file records actual evidence. A build proves compilation and linkage; it does not prove store checkout or backend commerce.
