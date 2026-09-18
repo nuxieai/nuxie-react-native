@@ -15,8 +15,19 @@ The iOS bare-example SwiftPM lock now names the new revision. The bare host pass
 in the installed file dependency; reinstalling the local package with
 `pnpm --ignore-workspace install --force --offline` restored the current pinned
 artifact, and the build passed. Expo prebuild, pod installation, and the arm64 iOS simulator Debug build also
-passed with iOS `858321e2`. Expo Android `:app:assembleDebug` passed as well (360 tasks). Signed-video
-playback remains outstanding; the broader evidence below belongs to earlier revisions.
+passed with iOS `858321e2`. Expo Android `:app:assembleDebug` passed as well (360 tasks). Both hosts then visibly played the signed video on iOS and Android, with 12
+screenshot samples per host showing both red and blue phases. Independent
+hashes of all four apps' cached scene and video bytes matched the signed
+inventory. Expo also restarted and played from cache with the fixture origin
+suspended, while Metro remained available. Its Android host waited through two
+30-second profile timeouts before presenting. The first restart command opened
+the Expo launcher; the corrected deep-link launch reached the SDK and passed.
+This is origin-outage coverage, not fully offline JavaScript startup.
+
+The Lab supports ignored local defaults in development Metro bundles. SDK and
+example typechecks, lint, and all 19 wrapper tests passed. An actual release-mode
+bare-host bundle excluded the local fixture keys. Final readiness/review and the
+broader failure, audio, caption, and resource matrix remain outstanding.
 
 ## Earlier video delivery candidate — September 18, 2026
 
