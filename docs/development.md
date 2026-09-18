@@ -28,6 +28,13 @@ Keep the generated Maven artifact out of source control and inside the npm tarba
 
 Both hosts load `examples/shared/lab.tsx`. They intentionally have independent package and native project configuration.
 
+For unattended playback checks, create ignored `examples/shared/local-defaults.json`
+with `iosKey` and `androidKey` development public keys. Development Metro bundles
+use those defaults to configure the Lab on startup. Release bundles use empty
+defaults. Leave `validateOnConnect` unset for playback-only checks; enabling it
+with entity IDs runs the documented spending checks. Restart Metro after changing
+the defaults. Never put provider credentials in this file.
+
 Bare React Native:
 
 ```sh

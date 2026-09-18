@@ -3,4 +3,4 @@ const { getDefaultConfig } = require('expo/metro-config');
 const config = getDefaultConfig(__dirname);
 config.watchFolders = [...(config.watchFolders ?? []), path.resolve(__dirname, '../shared')];
 config.resolver.nodeModulesPaths = [path.resolve(__dirname, 'node_modules')];
-module.exports = config;
+module.exports = require('../shared/metro-defaults.cjs')(config);
