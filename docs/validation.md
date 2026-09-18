@@ -16,10 +16,13 @@ wrapper adds its pinned publication without registering the variant again.
 At these pins, `prepare:native`, `lint`, `typecheck`, `typecheck:examples`, `test`
 (19 passing tests), `build`, and `check:package` passed. Package verification
 checked the native digest, both 64-bit ABIs, ELF 16 KiB alignment, and the npm
-file inventory. The bare Android host's `:app:assembleDebug` passed.
+file inventory. Bare React Native passed `:app:assembleDebug` and the arm64
+iOS simulator Debug build on Xcode 27. Its SwiftPM resolution records the exact
+iOS revision above. Expo 57.0.22 / React Native 0.86.3 passed prebuild,
+`:app:assembleDebug`, and the arm64 iOS simulator Debug build on Xcode 27.
+Both Android debug APKs passed `zipalign -c -P 16 -v 4`.
 These checks do not establish video playback through a React Native or Expo
-host. iOS host builds, Expo host builds, and signed-video device qualification
-remain outstanding at these pins.
+host. Signed-video device qualification remains outstanding at these pins.
 
 ## September 13 development matrix
 
