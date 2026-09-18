@@ -15,8 +15,8 @@ The iOS bare-example SwiftPM lock now names the new revision. The bare host pass
 in the installed file dependency; reinstalling the local package with
 `pnpm --ignore-workspace install --force --offline` restored the current pinned
 artifact, and the build passed. Expo prebuild, pod installation, and the arm64 iOS simulator Debug build also
-passed with iOS `858321e2`. Its Android build and signed-video playback remain
-outstanding; the broader evidence below belongs to earlier revisions.
+passed with iOS `858321e2`. Expo Android `:app:assembleDebug` passed as well (360 tasks). Signed-video
+playback remains outstanding; the broader evidence below belongs to earlier revisions.
 
 ## Earlier video delivery candidate — September 18, 2026
 
