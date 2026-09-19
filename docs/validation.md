@@ -2,9 +2,12 @@
 
 ## Current native pins
 
-iOS `95d76d41eb4cc945cb57e5c1bcd8333ed15d55cc` and Android `4d65783e2eec5b585673041146dff887258d3c93` include
+iOS `48fa51d6591f61d437620abfa06eb7fcb1a64564` and Android `4d65783e2eec5b585673041146dff887258d3c93` include
 published Apple runtime 0.10.8 and Android runtime 0.4.8, rendered-video visibility,
-and interruption recovery fixes. `python3 scripts/prepare-native.py` rebuilt the
+interruption recovery, and preservation of leased iOS video files when signed
+metadata conflicts with verified size. The iOS cache-only guard has an
+independent native regression. The preceding iOS `95d76d41` / same Android pin
+passed the checks below. `python3 scripts/prepare-native.py` rebuilt the
 pinned Android Maven artifact, and `node scripts/check-package.mjs` passed exports,
 server import, plugin, native digest, 16 KiB alignment and the 77-file package
 inventory checks. Lint, SDK and example typechecks, all 19 JavaScript tests, and
