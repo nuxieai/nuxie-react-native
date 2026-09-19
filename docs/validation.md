@@ -2,6 +2,20 @@
 
 ## Current native pins
 
+iOS `1e6970f306a9dac2ed567a239bf0e64a83e2d7cc` and Android
+`20f9d42f7d5fe1cba6e2426d63c24499eb966ce7` add obsolete profile-acquisition
+cancellation and active system-caption preference refresh. Both accept
+distinct video bindings that share immutable media. These native changes have
+focused native regressions and device qualification. The PR records wrapper
+preparation, resolution, and committed-tree readiness at these exact pins.
+
+The prior wrapper playback and signed-download evidence below remains tied to
+its recorded revisions; this pin refresh does not repeat the full device matrix.
+Native media-clock timing qualification is separate from wrapper playback and
+does not measure external speaker latency.
+
+## Previous native pin qualification
+
 iOS `48fa51d6591f61d437620abfa06eb7fcb1a64564` and Android
 `4d65783e2eec5b585673041146dff887258d3c93` include published Apple runtime
 0.10.8 and Android runtime 0.4.8, rendered-video visibility, interruption
@@ -9,7 +23,7 @@ recovery, and preservation of leased iOS video files when signed metadata
 conflicts with verified size. The bare SwiftPM lock resolves the iOS pin.
 The PR records final committed-tree readiness.
 
-With preceding iOS `95d76d41` and the same Android pin, the canonical check
+With preceding iOS `95d76d41` and Android `4d65783e`, the canonical check
 passed lint, SDK/example typechecks, 19 JavaScript tests, package build, exports,
 server import, plugin, native digest, 16 KiB alignment, and 77-file inventory.
 Bare React Native and Expo each passed arm64 iOS simulator and Android Debug
