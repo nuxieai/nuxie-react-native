@@ -2,22 +2,55 @@
 
 ## Current native pins
 
-iOS `48fa51d6591f61d437620abfa06eb7fcb1a64564` and Android `4d65783e2eec5b585673041146dff887258d3c93` include
-published Apple runtime 0.10.8 and Android runtime 0.4.8, rendered-video visibility,
-interruption recovery, and preservation of leased iOS video files when signed
-metadata conflicts with verified size. The iOS cache-only guard has an
-independent native regression. The preceding iOS `95d76d41` / same Android pin
-passed the checks below. `python3 scripts/prepare-native.py` rebuilt the
-pinned Android Maven artifact, and `node scripts/check-package.mjs` passed exports,
-server import, plugin, native digest, 16 KiB alignment and the 77-file package
-inventory checks. Lint, SDK and example typechecks, all 19 JavaScript tests, and
-the package build passed at these pins. Bare React Native and Expo each passed
-the arm64 iOS simulator build and Android Debug assembly. Both example packages
-were refreshed from the prepared package, and their Android AAR digests match
-the pinned artifact. The bare SwiftPM lock resolved the exact iOS pin; the first
-readiness run rejected this generated change after all checks passed. Refreshed
-playback and final readiness remain pending. Results below identify the earlier
-revisions they qualified.
+iOS `48fa51d6591f61d437620abfa06eb7fcb1a64564` and Android
+`4d65783e2eec5b585673041146dff887258d3c93` include published Apple runtime
+0.10.8 and Android runtime 0.4.8, rendered-video visibility, interruption
+recovery, and preservation of leased iOS video files when signed metadata
+conflicts with verified size. The bare SwiftPM lock resolves the iOS pin.
+The PR records final committed-tree readiness.
+
+With preceding iOS `95d76d41` and the same Android pin, the canonical check
+passed lint, SDK/example typechecks, 19 JavaScript tests, package build, exports,
+server import, plugin, native digest, 16 KiB alignment, and 77-file inventory.
+Bare React Native and Expo each passed arm64 iOS simulator and Android Debug
+builds. Both installed Android AARs were independently matched to the prepared
+artifact. Both hosts then visibly played the signed video on the iOS 26.5
+simulator and approved API 36 Android emulator; 12 screenshots per host captured
+red and blue phases, and independent cached scene/MP4 hashes matched the signed
+inventory. One bare Android capture failed on an empty adb screenshot; its
+bounded transport retry passed without restarting the app.
+
+The later iOS cache-only guard has an independent native regression. The bare
+host built against that final pin and passed the actual acquisition failures
+and recovery below. These checks do not establish physical Android performance,
+measured audio synchronization, or the entire lifecycle/resource matrix.
+Evidence lives in the parent worktree's `.nuxie/task3b-rn-final-*` and
+`.nuxie/task3b-ios-{corrupt,interrupted}*` logs, samples, and cache hashes.
+
+## Signed iOS download failures and recovery — September 18, 2026
+
+The actual bare app used final iOS `48fa51d6`, a separate fixture origin, and the
+same signed release. The fixture copy changed only unsigned delivery base URLs.
+A normal baseline rendered red/blue video and warmed the profile and scene.
+Before each fault, the app was terminated and only files whose bytes matched the
+synthetic MP4's known SHA-256 were removed, including its object-cache, lease,
+and URL-cache copies. The signed profile and verified scene remained intact.
+
+The existing parent fixture server ran with `--mode corrupt`, then separately
+with `--mode interrupted --after-bytes 1024`. Each case received two MP4 requests
+(cached-profile admission and the fresh profile). Corruption returned the full
+22,065 bytes with incorrect content; interruption wrote only 1,024 bytes before
+closing. The SDK reported `JourneyReleaseResourceFailure`, promoted no video
+object, left no partial files in app temporary storage, and retained the exact
+verified scene.
+
+For each recovery, the harness only terminated the app, restarted the same
+fixture endpoint in normal mode, and relaunched the app. It did **not** remove
+or repair any cache after the fault. Each recovery fetched the MP4 once,
+restored its exact signed digest, and produced 12 screenshots containing both
+video phases. Server ledgers, cleanup snapshots, SDK system logs, and pixel
+samples record each step. These are simulator end-to-end tests, not mocked
+transport tests.
 
 This file records actual evidence. A build proves compilation and linkage; it does not prove store checkout or backend commerce.
 
