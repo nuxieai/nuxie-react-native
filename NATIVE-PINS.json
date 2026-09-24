@@ -1,10 +1,10 @@
 {
   "ios": {
     "repository": "https://github.com/nuxieai/nuxie-ios.git",
-    "revision": "9c278ef24852d5480700fa55aaa62d4cc097290f"
+    "revision": "7fb80bb4d6a933286f7a8d0f89b3547395e84508"
   },
   "android": {
     "repository": "https://github.com/nuxieai/nuxie-android.git",
-    "revision": "203016ac2ddeff3a7f5c6161aa886571a49e4eff"
+    "revision": "0cbe8086068eb1a0d7e1c53c4440de4c9e3bd5ae"
   }
 }

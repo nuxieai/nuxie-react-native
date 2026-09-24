@@ -2,21 +2,23 @@
 
 ## Experience goal and eligibility pins
 
-iOS `9c278ef24852d5480700fa55aaa62d4cc097290f` and Android
-`203016ac2ddeff3a7f5c6161aa886571a49e4eff` implement the Experience policy
+iOS `7fb80bb4d6a933286f7a8d0f89b3547395e84508` and Android
+`0cbe8086068eb1a0d7e1c53c4440de4c9e3bd5ae` implement the Experience policy
 hard cut: one optional goal, retained conversion measurement, presentation-safe
-exits, and offer-specific access checks. Milestone and old policy payloads are
-rejected. The iOS pin additionally bounds retained subscriber-delivery retries
-while preserving original eligibility and capture order. Both SDKs also complete
-terminal dismissals before presentation without manufacturing screen events.
+exits, and offer-specific access checks. Both preserve internal action and
+renderer origins through redaction, durable capture, and recovery; ordinary
+analytics IDs cannot authorize direct custom attribution. Old milestone/policy
+payloads are rejected. Terminal dismissals before presentation complete without
+manufacturing screen events.
 
-Both native SDK gates passed at these pins. `python3 scripts/prepare-native.py`
-and `node scripts/check.mjs` passed: lint, SDK/example types, 19 JavaScript tests,
-package build/check, and bare/Expo iOS simulator and Android Debug builds.
-Both iOS hosts resolve the exact iOS pin; installed example pins were refreshed
-and verified before the check.
-Rendered goal/eligibility acceptance remains part of the coordinated platform
-cutover.
+Both native SDK full gates passed at these pins. `python3 scripts/prepare-native.py`
+and `node scripts/check.mjs` passed for this refresh. The canonical wrapper check
+covers lint, SDK/example types, 19 JavaScript tests, package build and inventory,
+native artifact checks, and bare React Native plus Expo iOS simulator and Android
+Debug builds. Both hosts were reinstalled from the local package before checking;
+the bare SwiftPM lock resolves the exact iOS revision above. Evidence:
+`/tmp/nuxie-goal-origin-rn-{prepare,full}.txt`. Rendered goal/eligibility acceptance
+remains part of the coordinated platform cut.
 
 ## Previous video SDK pin qualification
 
