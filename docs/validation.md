@@ -2,21 +2,18 @@
 
 ## Experience goal and eligibility pins
 
-iOS `45af488ea507429c0da2c7659ca971ee45460efb` and Android
-`af804278a226282e8e3abdea7c48385901b79638` implement the Experience policy
+iOS `b379b06ff0e1df0bf3d9325309518b282c0a766b` and Android
+`9097dc960c6662c0108f3d7e94a661a20ff99413` implement the Experience policy
 hard cut: one optional goal, retained conversion measurement, presentation-safe
 exits, and offer-specific access checks. Milestone and old policy payloads are
 rejected. The iOS pin additionally bounds retained subscriber-delivery retries
 while preserving original eligibility and capture order.
 
-Both native SDK gates passed. `python3 scripts/prepare-native.py` and
-`node scripts/check.mjs` passed: lint, types, 19 JavaScript tests, package build,
-and bare/Expo iOS and Android host builds. Both iOS logs resolved `45af488e`.
-The initial run built stale installed example file dependencies; the host gate
-now rejects mismatched installed pins. After refreshing each example with
-`pnpm --ignore-workspace install --force`, the first build encountered a stale
-Xcode compiled-header cache. Cleaning both example builds and rerunning the
-complete check passed.
+Both native SDK gates passed at these pins. `python3 scripts/prepare-native.py`
+and `node scripts/check.mjs` passed: lint, SDK/example types, 19 JavaScript tests,
+package build/check, and bare/Expo iOS simulator and Android Debug builds.
+Both iOS hosts resolve the exact iOS pin; installed example pins were refreshed
+and verified before the check.
 Rendered goal/eligibility acceptance remains part of the coordinated platform
 cutover.
 
