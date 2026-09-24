@@ -2,7 +2,7 @@
 
 ## Experience goal and eligibility pins
 
-iOS `7fb80bb4d6a933286f7a8d0f89b3547395e84508` and Android
+iOS `8c41617716c5c5086aba44e0d64f048692c515ae` and Android
 `0cbe8086068eb1a0d7e1c53c4440de4c9e3bd5ae` implement the Experience policy
 hard cut: one optional goal, retained conversion measurement, presentation-safe
 exits, and offer-specific access checks. Both preserve internal action and
@@ -11,14 +11,19 @@ analytics IDs cannot authorize direct custom attribution. Old milestone/policy
 payloads are rejected. Terminal dismissals before presentation complete without
 manufacturing screen events.
 
-Both native SDK full gates passed at these pins. `python3 scripts/prepare-native.py`
-and `node scripts/check.mjs` passed for this refresh. The canonical wrapper check
-covers lint, SDK/example types, 19 JavaScript tests, package build and inventory,
-native artifact checks, and bare React Native plus Expo iOS simulator and Android
-Debug builds. Both hosts were reinstalled from the local package before checking;
-the bare SwiftPM lock resolves the exact iOS revision above. Evidence:
-`/tmp/nuxie-goal-origin-rn-{prepare,full}.txt`. Rendered goal/eligibility acceptance
-remains part of the coordinated platform cut.
+Both native SDK full gates passed at these pins. The iOS timestamp correction
+preserves millisecond occurrence ordering for renderer goals. `node scripts/check.mjs`
+passed: lint, SDK/example types, 19 JavaScript tests, package inventory/native
+artifact checks, and bare React Native plus Expo iOS simulator and Android Debug
+builds. Both example hosts were reinstalled with
+`pnpm --ignore-workspace install --force --offline`; their installed pins are
+checked against the package, and the bare SwiftPM lock resolves the exact iOS
+revision. Log: `/tmp/nuxie-goal-clock-rn-full.txt` (88270 exit 0).
+
+The parent eight-case iOS/server core acceptance also passed at `a7c5b5d094`,
+including actual renderer goals with exit enabled/disabled and owned-offer routing.
+This is native behavioral evidence; these wrapper checks prove package and host
+integration. Coordinated delivery remains pending.
 
 ## Previous video SDK pin qualification
 

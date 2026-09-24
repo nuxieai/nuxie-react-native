@@ -1,7 +1,7 @@
 {
   "ios": {
     "repository": "https://github.com/nuxieai/nuxie-ios.git",
-    "revision": "7fb80bb4d6a933286f7a8d0f89b3547395e84508"
+    "revision": "8c41617716c5c5086aba44e0d64f048692c515ae"
   },
   "android": {
     "repository": "https://github.com/nuxieai/nuxie-android.git",
