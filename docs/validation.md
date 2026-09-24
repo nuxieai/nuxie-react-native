@@ -1,6 +1,22 @@
 # SDK qualification
 
-## Current native pins
+## Experience goal and eligibility pins
+
+iOS `170f8cbac97d70034a838d72a79b05e46369d3c9` and Android
+`af804278a226282e8e3abdea7c48385901b79638` implement the Experience policy
+hard cut: one optional goal, retained conversion measurement, presentation-safe
+exits, and offer-specific access checks. Milestone and old policy payloads are
+rejected. These commits passed their native SDK gates. At these pins,
+`python3 scripts/prepare-native.py` and `node scripts/check.mjs` passed:
+lint, SDK/example types, 19 JavaScript tests, package build/exports, native
+digest and 16 KiB alignment, and bare/Expo iOS simulator and Android Debug
+builds. Both hosts' installed Android artifacts matched the prepared SHA-256.
+Evidence: `/tmp/nuxie-goal-react-native-wrapper-check-space-retry.txt` and
+`/tmp/nuxie-goal-react-native-prepare-native.txt` in the implementation workspace.
+These build checks do not establish rendered goal/eligibility acceptance;
+that remains part of the coordinated platform cutover.
+
+## Previous video SDK pin qualification
 
 iOS `1e6970f306a9dac2ed567a239bf0e64a83e2d7cc` and Android
 `20f9d42f7d5fe1cba6e2426d63c24499eb966ce7` add obsolete profile-acquisition
