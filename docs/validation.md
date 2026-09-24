@@ -2,19 +2,23 @@
 
 ## Experience goal and eligibility pins
 
-iOS `170f8cbac97d70034a838d72a79b05e46369d3c9` and Android
+iOS `45af488ea507429c0da2c7659ca971ee45460efb` and Android
 `af804278a226282e8e3abdea7c48385901b79638` implement the Experience policy
 hard cut: one optional goal, retained conversion measurement, presentation-safe
 exits, and offer-specific access checks. Milestone and old policy payloads are
-rejected. These commits passed their native SDK gates. At these pins,
-`python3 scripts/prepare-native.py` and `node scripts/check.mjs` passed:
-lint, SDK/example types, 19 JavaScript tests, package build/exports, native
-digest and 16 KiB alignment, and bare/Expo iOS simulator and Android Debug
-builds. Both hosts' installed Android artifacts matched the prepared SHA-256.
-Evidence: `/tmp/nuxie-goal-react-native-wrapper-check-space-retry.txt` and
-`/tmp/nuxie-goal-react-native-prepare-native.txt` in the implementation workspace.
-These build checks do not establish rendered goal/eligibility acceptance;
-that remains part of the coordinated platform cutover.
+rejected. The iOS pin additionally bounds retained subscriber-delivery retries
+while preserving original eligibility and capture order.
+
+Both native SDK gates passed. `python3 scripts/prepare-native.py` and
+`node scripts/check.mjs` passed: lint, types, 19 JavaScript tests, package build,
+and bare/Expo iOS and Android host builds. Both iOS logs resolved `45af488e`.
+The initial run built stale installed example file dependencies; the host gate
+now rejects mismatched installed pins. After refreshing each example with
+`pnpm --ignore-workspace install --force`, the first build encountered a stale
+Xcode compiled-header cache. Cleaning both example builds and rerunning the
+complete check passed.
+Rendered goal/eligibility acceptance remains part of the coordinated platform
+cutover.
 
 ## Previous video SDK pin qualification
 
