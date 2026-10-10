@@ -1,8 +1,19 @@
 # SDK qualification
 
+## Bazel build migration
+
+The migration currently pins landed iOS
+`615a31bd03483e79a8590f8408b035659581f8f7`. Android remains at its recorded
+revision until the native Bazel migration lands. Targeted preparation tests
+and imports of the original Debug and Release iOS producer receipts passed.
+Native bridge compilation, the complete wrapper readiness command, example
+application builds and SwiftPM lock refresh remain pending at the new pins.
+
+Historical qualification below remains tied to its recorded revisions.
+
 ## Experience goal and eligibility pins
 
-iOS `615a31bd03483e79a8590f8408b035659581f8f7` and Android
+iOS `8c41617716c5c5086aba44e0d64f048692c515ae` and Android
 `0cbe8086068eb1a0d7e1c53c4440de4c9e3bd5ae` implement the Experience policy
 hard cut: one optional goal, retained conversion measurement, presentation-safe
 exits, and offer-specific access checks. Both preserve internal action and
