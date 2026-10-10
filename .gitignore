@@ -11,3 +11,7 @@ examples/.build
 *.tgz
 android/maven/
 examples/shared/local-defaults.json
+/.bazel-cache.local.bazelrc
+/.bazel-cache.*.tmp
+/bazel-*
+/scripts/bazel/__pycache__/
