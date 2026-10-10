@@ -1,1 +1,65 @@
 module(name = "nuxie_react_native")
+
+js_tools = use_repo_rule("//scripts/bazel:tools.bzl", "js_tools")
+js_tools(name = "nuxie_js_tools")
+js_dependencies = use_repo_rule("//scripts/bazel:tools.bzl", "js_dependencies")
+js_dependencies(name = "nuxie_js_dependencies", lock = "//:pnpm-lock.yaml")
+
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "apple_support", version = "2.8.0")
+bazel_dep(name = "rules_apple", version = "4.5.0")
+bazel_dep(name = "rules_swift", version = "4.1.0")
+bazel_dep(name = "rules_cc", version = "0.2.20")
+bazel_dep(name = "rules_android", version = "0.8.0")
+bazel_dep(name = "rules_java", version = "9.3.0")
+bazel_dep(name = "rules_kotlin", version = "2.2.2")
+bazel_dep(name = "rules_jvm_external", version = "7.1")
+
+kotlin = use_extension("@rules_kotlin//src/main/starlark/core/repositories:bzlmod_setup.bzl", "rules_kotlin_extensions")
+kotlin.kotlinc_version(version = "2.2.0", sha256 = "1adb6f1a5845ba0aa5a59e412e44c8e405236b957de1a9683619f1dca3b16932")
+use_repo(kotlin, "com_github_jetbrains_kotlin")
+register_toolchains("//scripts/bazel:kotlin_toolchain")
+sdk = use_extension("@rules_android//rules/android_sdk_repository:rule.bzl", "android_sdk_repository_extension")
+sdk.configure(api_level = 37, build_tools_version = "37.0.0")
+use_repo(sdk, "androidsdk")
+
+native_dependencies = use_repo_rule("//scripts/bazel:native-dependencies.bzl", "native_dependencies")
+native_dependencies(name = "nuxie_codegen_dependencies", lock = "//:pnpm-lock.yaml")
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    name = "rn_maven",
+    # React and AndroidX publish Gradle module constraints. Resolve the locked
+    # graph with the same metadata policy as the owning Android application.
+    resolver = "gradle",
+    lock_file = "//scripts/bazel/locks:maven_install.json",
+    fail_if_repin_required = True,
+    artifacts = [
+        "com.facebook.react:react-android:aar:release:0.87.1",
+        "androidx.browser:browser:1.8.0",
+        "androidx.sqlite:sqlite-framework:2.6.2",
+        "com.android.billingclient:billing:9.1.0",
+        "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0",
+        "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.7.2",
+    ],
+    repositories = ["https://dl.google.com/dl/android/maven2", "https://repo.maven.apache.org/maven2"],
+    aar_import_bzl_label = "@rules_android//android:rules.bzl",
+    use_starlark_android_rules = True,
+    version_conflict_policy = "pinned",
+)
+use_repo(maven, "rn_maven", "unpinned_rn_maven")
+native = use_extension("//scripts/bazel:native_artifacts.bzl", "native_artifacts")
+native.artifacts(
+    pins = "//:NATIVE-PINS.json",
+    android_dependencies = {
+        "@rn_maven//:androidx_browser_browser": "androidx.browser:browser:1.8.0",
+        "@rn_maven//:androidx_sqlite_sqlite_framework": "androidx.sqlite:sqlite-framework:2.6.2",
+        "@rn_maven//:com_android_billingclient_billing": "com.android.billingclient:billing:9.1.0",
+        # React's owning Gradle graph mediates the older POM request to 2.2.0.
+        "@rn_maven//:org_jetbrains_kotlin_kotlin_stdlib": "org.jetbrains.kotlin:kotlin-stdlib:2.0.21",
+        "@rn_maven//:org_jetbrains_kotlinx_kotlinx_coroutines_android": "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0",
+        "@rn_maven//:org_jetbrains_kotlinx_kotlinx_serialization_json_jvm": "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2",
+    },
+)
+use_repo(native, "nuxie_native_ios", "nuxie_native_android")
