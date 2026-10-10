@@ -15,11 +15,10 @@ elif command -v bazelisk >/dev/null 2>&1; then
 elif command -v bazel >/dev/null 2>&1; then
   bazel_bin="$(command -v bazel)"
 else
-  echo "Bazel is required. Install Bazelisk, which reads this checkout's .bazelversion." >&2
-  exit 1
+  bazel_bin="$ROOT_DIR/scripts/bazel/launcher.py"
 fi
 
-startup_args=()
+startup_args=(--nosystem_rc --nohome_rc)
 if [[ -n "${NUXIE_BAZEL_CACHE_DIR+x}" ]]; then
   cache_options="$(python3 "$ROOT_DIR/scripts/bazel/cache.py")"
   startup_args+=("$cache_options")

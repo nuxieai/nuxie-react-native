@@ -1,0 +1,18 @@
+load("//scripts/bazel:sdk.bzl", "js_compile", "js_distribution", "js_test")
+
+package(default_visibility = ["//visibility:public"])
+
+_sources = glob(["src/**/*.ts", "src/**/*.tsx"]) + ["package.json", "tsconfig.json", "tsconfig.build.json"]
+
+js_compile(name = "bundle", srcs = _sources, mode = "bundle")
+js_compile(name = "declarations", srcs = _sources, mode = "declarations")
+js_compile(name = "typecheck", srcs = _sources, mode = "typecheck")
+js_distribution(name = "sdk", bundle = ":bundle", declarations = ":declarations")
+js_test(name = "unit_tests", srcs = _sources + glob(["tests/**"], exclude = ["tests/**/BUILD*"]))
+
+exports_files(["pnpm-lock.yaml"])
+
+exports_files(["package.json", "NATIVE-PINS.json", "src/specs/NativeNuxie.ts"])
+alias(name = "ios_simulator_arm64", actual = "@apple_support//platforms:ios_sim_arm64")
+alias(name = "ios_simulator_x86_64", actual = "@apple_support//platforms:ios_x86_64")
+platform(name = "android_arm64", constraint_values = ["@platforms//os:android", "@platforms//cpu:arm64"])

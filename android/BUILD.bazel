@@ -1,0 +1,26 @@
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+load("//scripts/bazel:native.bzl", "native_codegen")
+
+package(default_visibility = ["//visibility:public"])
+
+native_codegen(
+    name = "codegen",
+    srcs = ["//:src/specs/NativeNuxie.ts"],
+    package = "//:package.json",
+    platform = "android",
+)
+
+kt_android_library(
+    name = "bridge",
+    srcs = glob(["src/main/**/*.kt", "src/main/**/*.java"]) + [":codegen"],
+    manifest = "src/main/AndroidManifest.xml",
+    custom_package = "ai.nuxie.reactnative",
+    deps = [
+        "@nuxie_native_android//:sdk",
+        "@rn_maven//:com_facebook_react_react_android_release",
+        "@rn_maven//:org_jetbrains_kotlinx_kotlinx_coroutines_android",
+        "@rn_maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core_jvm",
+        "@rn_maven//:org_jetbrains_kotlin_kotlin_stdlib",
+    ],
+    target_compatible_with = ["@platforms//os:android"],
+)

@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+"""Prepare pinned native Bazel products inside the downstream checkout."""
+import fcntl
+import json
+import os
+import platform
+from pathlib import Path
+import subprocess
+import sys
+
+
+def checkout(root, sdk, pin):
+    source = root / '.native' / sdk
+    source.parent.mkdir(exist_ok=True)
+    existed = source.exists()
+    if not existed:
+        subprocess.run(['git', 'clone', '--no-checkout', pin['repository'], str(source)], check=True)
+    if existed and subprocess.check_output(['git', 'status', '--porcelain'], cwd=source, text=True).strip():
+        raise ValueError('Preserving modified native checkout: ' + str(source))
+    subprocess.run(['git', 'fetch', 'origin', pin['revision']], cwd=source, check=True)
+    subprocess.run(['git', 'checkout', '--detach', pin['revision']], cwd=source, check=True)
+    actual = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip()
+    if actual != pin['revision']:
+        raise ValueError('Native pin mismatch for ' + sdk)
+    producer = source / 'scripts/bazel/sdk.py'
+    if not producer.is_file():
+        raise ValueError('The ' + sdk + ' pin needs its landed Bazel build migration')
+    return source, producer
+
+
+def prepare(root, sdks, configuration='Debug', android_output=None):
+    root = Path(root).resolve()
+    pins = json.loads((root / 'NATIVE-PINS.json').read_text())
+    native = root / '.native'
+    native.mkdir(exist_ok=True)
+    products = {}
+    with (native / '.prepare.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        for sdk in sdks:
+            supplied = os.environ.get('NUXIE_' + sdk.upper() + '_ARTIFACTS')
+            if supplied:
+                from native_artifacts import inventory
+                manifest = Path(supplied)
+                if not manifest.is_absolute():
+                    raise ValueError('Native artifact overrides must be absolute')
+                if manifest.is_dir():
+                    manifest = manifest / 'sdk-artifacts.json'
+                inventory(manifest, sdk, pins[sdk]['revision'])
+                products[sdk] = manifest
+                continue
+            source, producer = checkout(root, sdk, pins[sdk])
+            if sdk == 'ios':
+                if sys.platform != 'darwin':
+                    raise ValueError('iOS native preparation requires macOS')
+                architecture = platform.machine()
+                if architecture not in ('arm64', 'x86_64'):
+                    raise ValueError('Unsupported simulator host architecture: ' + architecture)
+                command = [sys.executable, str(producer), 'prepare', '--output', str(native / 'artifacts/ios'),
+                           '--configuration', configuration, '--platform', 'ios-simulator', '--architecture', architecture]
+            else:
+                output = android_output or native / 'artifacts/android'
+                command = [sys.executable, str(producer), 'prepare', '--output', str(output),
+                           '--maven-version', '0.2.0-' + pins[sdk]['revision']]
+            subprocess.run(command, cwd=source, check=True)
+            products[sdk] = Path(command[command.index('--output') + 1]) / 'sdk-artifacts.json'
+    return products

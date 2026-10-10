@@ -1,0 +1,27 @@
+load("@rules_swift//swift:swift.bzl", "swift_library")
+load("//scripts/bazel:native.bzl", "native_codegen")
+
+package(default_visibility = ["//visibility:public"])
+
+# The app-owned CocoaPods integration compiles NuxieReactNative.mm against its
+# React headers and NuxieSpec codegen module. This target compiles every owned
+# Swift bridge source and generates the header used by that ObjC++ shim.
+swift_library(
+    name = "swift_bridge",
+    module_name = "NuxieReactNative",
+    srcs = glob(["**/*.swift"]),
+    copts = ["-swift-version", "5"],
+    generates_header = True,
+    deps = ["@nuxie_native_ios//:sdk"],
+    target_compatible_with = ["@platforms//os:ios"],
+)
+
+native_codegen(
+    name = "codegen",
+    srcs = ["//:src/specs/NativeNuxie.ts"],
+    package = "//:package.json",
+    platform = "ios",
+)
+
+filegroup(name = "host_integration_sources", srcs = ["NuxieReactNative.h", "NuxieReactNative.mm"])
+alias(name = "bridge", actual = ":swift_bridge")
