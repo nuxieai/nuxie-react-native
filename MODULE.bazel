@@ -35,7 +35,6 @@ maven.install(
     fail_if_repin_required = True,
     artifacts = [
         "com.facebook.react:react-android:aar:release:0.87.1",
-        "androidx.browser:browser:1.8.0",
         "androidx.sqlite:sqlite-framework:2.6.2",
         "com.android.billingclient:billing:9.1.0",
         "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
@@ -53,7 +52,6 @@ native = use_extension("//scripts/bazel:native_artifacts.bzl", "native_artifacts
 native.artifacts(
     pins = "//:NATIVE-PINS.json",
     android_dependencies = {
-        "@rn_maven//:androidx_browser_browser": "androidx.browser:browser:1.8.0",
         "@rn_maven//:androidx_sqlite_sqlite_framework": "androidx.sqlite:sqlite-framework:2.6.2",
         "@rn_maven//:com_android_billingclient_billing": "com.android.billingclient:billing:9.1.0",
         # React's owning Gradle graph mediates the older POM request to 2.2.0.
