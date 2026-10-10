@@ -38,3 +38,11 @@ Run the receipt/isolation/frontend oracles with:
 ```sh
 python3 -B -m unittest discover -s scripts/bazel -p 'test_*.py'
 ```
+
+When reusing separate iOS preparations, set absolute
+`NUXIE_IOS_DEBUG_ARTIFACTS` and `NUXIE_IOS_RELEASE_ARTIFACTS` paths to their
+original producer manifests or directories. Preparation selects the requested
+configuration and falls back to `NUXIE_IOS_ARTIFACTS` when its specific override
+is unset. Each selected receipt must match the native pin, configuration and
+verified artifact inventory. An invalid explicit override fails without
+falling back to a different preparation.
