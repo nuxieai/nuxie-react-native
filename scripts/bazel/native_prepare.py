@@ -28,6 +28,26 @@ def checkout(root, sdk, pin):
     return source, producer
 
 
+def supplied_artifacts(sdk, pin, configuration='Debug'):
+    value = None
+    if sdk == 'ios':
+        if configuration not in ('Debug', 'Release'):
+            raise ValueError('Select the Debug or Release iOS configuration')
+        value = os.environ.get('NUXIE_IOS_' + configuration.upper() + '_ARTIFACTS')
+    value = value or os.environ.get('NUXIE_' + sdk.upper() + '_ARTIFACTS')
+    if not value:
+        return None
+    selected = Path(value).expanduser()
+    if not selected.is_absolute():
+        raise ValueError('Native artifact overrides must use absolute paths')
+    manifest = selected / 'sdk-artifacts.json' if selected.is_dir() else selected
+    from native_artifacts import inventory
+    receipt, _, _, _ = inventory(manifest, sdk, pin['revision'])
+    if sdk == 'ios' and not any(product.get('configuration') == configuration for product in receipt.get('products', [])):
+        raise ValueError('Prepared iOS artifacts do not contain the requested ' + configuration + ' configuration')
+    return manifest
+
+
 def prepare(root, sdks, configuration='Debug', android_output=None):
     root = Path(root).resolve()
     pins = json.loads((root / 'NATIVE-PINS.json').read_text())
@@ -37,16 +57,9 @@ def prepare(root, sdks, configuration='Debug', android_output=None):
     with (native / '.prepare.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         for sdk in sdks:
-            supplied = os.environ.get('NUXIE_' + sdk.upper() + '_ARTIFACTS')
+            supplied = supplied_artifacts(sdk, pins[sdk], configuration)
             if supplied:
-                from native_artifacts import inventory
-                manifest = Path(supplied)
-                if not manifest.is_absolute():
-                    raise ValueError('Native artifact overrides must be absolute')
-                if manifest.is_dir():
-                    manifest = manifest / 'sdk-artifacts.json'
-                inventory(manifest, sdk, pins[sdk]['revision'])
-                products[sdk] = manifest
+                products[sdk] = supplied
                 continue
             source, producer = checkout(root, sdk, pins[sdk])
             if sdk == 'ios':

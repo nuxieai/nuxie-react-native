@@ -2,7 +2,7 @@
 
 ## Experience goal and eligibility pins
 
-iOS `8c41617716c5c5086aba44e0d64f048692c515ae` and Android
+iOS `615a31bd03483e79a8590f8408b035659581f8f7` and Android
 `0cbe8086068eb1a0d7e1c53c4440de4c9e3bd5ae` implement the Experience policy
 hard cut: one optional goal, retained conversion measurement, presentation-safe
 exits, and offer-specific access checks. Both preserve internal action and
