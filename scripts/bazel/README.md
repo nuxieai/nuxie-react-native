@@ -10,6 +10,12 @@ compilation requires API37/build-tools37.0.0; the frontend exposes installed
 `android-37.0` platforms through a checkout-local SDK view without changing
 the machine's Android installation.
 
+The locked React Android release AAR includes its published Maven and Gradle
+module dependencies, including the AndroidX resource libraries. The local patch
+to pinned `rules_jvm_external` preserves those dependencies when its Gradle
+resolver selects a classified AAR. Refresh the dependency lock with
+`REPIN=1 scripts/bazel/bazel.sh run @rn_maven//:pin` after changing Maven inputs.
+
 `pnpm run prepare:native` prepares the pinned Android SDK through its Bazel
 producer and retains the source-addressed Maven coordinate and dependency POM
 used by npm consumers. `pnpm run build:native` also prepares the iOS simulator

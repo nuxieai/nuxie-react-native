@@ -1,0 +1,12 @@
+--- a/private/tools/java/com/github/bazelbuild/rules_jvm_external/resolver/gradle/GradleBuildScriptGenerator.java
++++ b/private/tools/java/com/github/bazelbuild/rules_jvm_external/resolver/gradle/GradleBuildScriptGenerator.java
+@@ -239,6 +239,9 @@
+         && dep.getClassifier() != null
+         && !dep.getClassifier().isEmpty()) {
+       notation.append("@").append(dep.getExtension());
++      // Explicit artifact notation disables transitives in Gradle. Keep the
++      // selected artifact while resolving its published dependency metadata.
++      return "create(\"" + notation + "\") { transitive = true }";
+     }
+     return "\"" + notation + "\"";
+   }
