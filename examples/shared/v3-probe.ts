@@ -73,14 +73,25 @@ export async function runV3Probe(client: NuxieClient, endpoint: string) {
   } catch (error) {
     failure = error instanceof Error ? error.message : String(error);
   } finally {
+    const finalFeatureState = client.getFeatures().state;
+    const teardown = async (name: string, action: () => void | Promise<void>) => {
+      try { await action(); }
+      catch (error) {
+        const message = `Teardown ${name} failed: ${error instanceof Error ? error.message : String(error)}`;
+        failure = failure ? `${failure}; ${message}` : message;
+      }
+    };
+    for (const unsubscribe of subscriptions) await teardown('subscription', unsubscribe);
+    await teardown('native-shutdown', async () => {
+      await client.shutdown();
+      checkpoints.push('native-shutdown-completed');
+    });
     const observation = { caseName: config.caseName, consumer: config.consumer, platform: config.platform,
       customerId: config.customerId, nativeVersion, checkpoints, activities, appActions, errors, states,
-      finalFeatureState: client.getFeatures().state, failure: failure ?? null };
+      finalFeatureState, failure: failure ?? null };
     const response = await fetch(base + '/observations', { method: 'POST',
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(observation) });
     if (!response.ok) throw new Error('Could not retain native v3 observations');
-    subscriptions.forEach(unsubscribe => unsubscribe());
-    await client.shutdown();
   }
   if (failure) throw new Error(failure);
 }
