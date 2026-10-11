@@ -40,7 +40,7 @@ def typed_equal(actual, expected):
     if type(expected) is bool:
         return type(actual) is bool and actual == expected
     if type(expected) in (int, float):
-        return type(actual) in (int, float) and math.isfinite(actual) and actual == expected
+        return is_json_number(actual) and actual == expected
     if isinstance(expected, dict):
         return (isinstance(actual, dict) and actual.keys() == expected.keys()
                 and all(typed_equal(actual[key], value) for key, value in expected.items()))
@@ -48,6 +48,10 @@ def typed_equal(actual, expected):
         return (isinstance(actual, list) and len(actual) == len(expected)
                 and all(typed_equal(left, right) for left, right in zip(actual, expected)))
     return type(actual) is type(expected) and actual == expected
+
+
+def is_json_number(value):
+    return type(value) is int or (type(value) is float and math.isfinite(value))
 
 
 def verify(ledger, native_log, manifest):
@@ -72,12 +76,12 @@ def verify(ledger, native_log, manifest):
     events = [row for row in ledger['events'] if row.get('distinct_id') == ledger['customerId']]
     controls = [row for row in events if row.get('event') == 'wrapper_v3_transport_probe']
     indexes = [row.get('properties', {}).get('probeIndex') for row in controls]
-    require(len(indexes) == 45 and set(indexes) == set(range(45))
-            and all(type(index) is int for index in indexes),
+    require(len(indexes) == 45
+            and all(is_json_number(index) and index == int(index) for index in indexes)
+            and set(indexes) == set(range(45)),
             'Independent native ingest did not receive all 45 distinct transport controls')
     require(any(row.get('event') == manifest['trigger']
-                and all(row.get('properties', {}).get(key) == value
-                        and type(row['properties'][key]) is type(value)
+                and all(typed_equal(row.get('properties', {}).get(key), value)
                         for key, value in manifest['triggerProperties'].items()) for row in events),
             'Actual native ingest did not receive exact typed trigger properties')
     journeys = [row for row in observed['activities'] if row['name'] in manifest['expectedActivities']]
@@ -90,7 +94,9 @@ def verify(ledger, native_log, manifest):
         for row in journeys:
             for field in ['experience_id', 'experience_version', 'leg_id', 'leg_generation']:
                 require(row['properties'].get(field) == expected[field], 'Wrong activity property: ' + field)
-            require(type(row['properties']['leg_generation']) is int, 'Generation must remain an integer')
+            require(is_json_number(row['properties']['leg_generation'])
+                    and row['properties']['leg_generation'] == int(row['properties']['leg_generation']),
+                    'Generation must remain an integer-valued JSON number')
         journey_id = journeys[0]['properties'].get('journey_id')
         uuid.UUID(journey_id)
         require(journeys[1]['properties'].get('journey_id') == journey_id, 'Journey UUID changed between activities')
