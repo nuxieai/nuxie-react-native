@@ -58,7 +58,7 @@ def ledger(accepted):
             'events': events, 'observations': [
                 {'caseName': selected['name'], 'consumer': 'test-consumer', 'platform': 'ios',
                  'customerId': 'customer', 'failure': None, 'nativeVersion': 'native-version',
-                 'checkpoints': ['native-event-transport-completed'],
+                 'checkpoints': ['native-event-transport-completed', 'native-shutdown-completed'],
                  'finalFeatureState': 'ready' if accepted else 'unknown',
                  'activities': [{'name': 'journey_started', 'properties': started},
                                 {'name': 'journey_completed', 'properties': dict(started, outcome='continue')}]
@@ -112,6 +112,7 @@ class ConsumerVerdictTests(unittest.TestCase):
             lambda value: value['observations'][0].update(customerId='other-customer'),
             lambda value: value['observations'][0].update(nativeVersion=None),
             lambda value: value['observations'][0]['checkpoints'].clear(),
+            lambda value: value['observations'][0]['checkpoints'].remove('native-shutdown-completed'),
             lambda value: value['requests'][1]['body'].update(distinct_id='other-customer'),
             lambda value: value['requests'][0].update(responseSha256='wrong-product'),
             lambda value: value['events'].pop(0),

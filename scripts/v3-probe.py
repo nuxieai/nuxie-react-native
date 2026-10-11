@@ -91,6 +91,8 @@ def verify(ledger, native_log, manifest):
             'Native version was not received through the wrapper')
     require('native-event-transport-completed' in observed['checkpoints'],
             'Consumer did not observe the native transport barrier')
+    require('native-shutdown-completed' in observed['checkpoints'],
+            'Consumer native teardown did not complete')
     delivered = [row for row in ledger['requests'] if row['path'] == '/profile' and row['status'] == 200]
     require(len(delivered) >= 2, 'Configure and identify profiles were not both delivered')
     require(any(row['body'].get('distinct_id') == ledger['customerId'] for row in delivered),
