@@ -65,6 +65,32 @@ with `NUXIE_RN_API_ENDPOINT` set to that same endpoint. Android Debug hosts
 use the `NUXIE_RN_API_ENDPOINT` Activity intent extra and
 `http://10.0.2.2:<port>` to reach the host fixture server.
 
+For the Expo iOS simulator consumer, keep the advertised bundle hostname aligned
+with Expo's localhost listener. From `examples/expo`, start its normal dev client:
+
+```sh
+REACT_NATIVE_PACKAGER_HOSTNAME=localhost pnpm --ignore-workspace exec expo start \
+  --dev-client --localhost --port "$METRO_PORT" --max-workers 1
+```
+
+The installed Expo 57 simulator dev launcher accepts `--initialUrl`; use that
+launch argument to load the server directly without an external deep-link prompt:
+
+```sh
+SIMCTL_CHILD_NUXIE_RN_API_ENDPOINT="$PROBE_ENDPOINT" xcrun simctl launch \
+  --terminate-running-process "$DEVICE_UDID" ai.nuxie.reactnative.expolab \
+  -RCT_jsLocation "localhost:$METRO_PORT" \
+  --initialUrl "http://localhost:$METRO_PORT"
+```
+
+Here `PROBE_ENDPOINT` is the fixture server's printed endpoint, and `METRO_PORT`
+belongs to the isolated Metro process. Retain its command, working directory and
+environment together with actual app-requested bundle bytes and matching source
+maps; match the served App, shared probe and installed SDK sources to the selected
+Git revision. Record the serving Node PID separately from the package-manager
+launcher and process group. Source maps fetched for qualification are separate
+receipts from the actual app's bundle requests.
+
 The probe calls the public JavaScript client, subscribes before configuration,
 identifies the fresh fixture customer and triggers the authored event. It records
 native activity, version and Feature state plus a barrier of 45 distinct native
