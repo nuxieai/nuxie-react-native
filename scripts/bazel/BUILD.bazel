@@ -6,3 +6,5 @@ exports_files(["native_artifacts.bzl", "native_artifacts.py"])
 
 exports_files(["native.bzl", "codegen.mjs", "native-dependencies.bzl", "native-dependencies.py", "native-toolchains.bzl"])
 native_kotlin_toolchain(name = "kotlin_toolchain")
+
+exports_files(["rules-jvm-external-classified-transitives.patch"])

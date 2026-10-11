@@ -4,78 +4,126 @@
     "androidx.sqlite:sqlite-framework": -1604297885,
     "com.android.billingclient:billing": -1319542972,
     "com.facebook.react:react-android": -235679351,
-    "org.jetbrains.kotlin:kotlin-stdlib": -1517215096,
+    "org.jetbrains.kotlin:kotlin-stdlib": 1660207403,
     "org.jetbrains.kotlinx:kotlinx-coroutines-android": -1538706767,
     "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm": -1515885333,
     "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm": -1679757067,
     "repositories": 752543690
   },
   "__RESOLVED_ARTIFACTS_HASH": {
-    "androidx.activity:activity:aar": 2029169211,
-    "androidx.annotation:annotation": -1427727976,
-    "androidx.annotation:annotation-experimental:aar": 1853119738,
-    "androidx.annotation:annotation-jvm": -1306756976,
-    "androidx.arch.core:core-common": -960660255,
-    "androidx.arch.core:core-runtime:aar": 721173269,
-    "androidx.collection:collection": 1591210031,
-    "androidx.collection:collection-jvm": -1428804017,
-    "androidx.concurrent:concurrent-futures": -1161138689,
-    "androidx.core:core-ktx:aar": 1736657922,
-    "androidx.core:core:aar": -223245576,
-    "androidx.customview:customview:aar": 270710132,
-    "androidx.fragment:fragment:aar": 528981372,
-    "androidx.interpolator:interpolator:aar": 1780515613,
-    "androidx.lifecycle:lifecycle-common": -529086081,
-    "androidx.lifecycle:lifecycle-livedata-core:aar": -287068355,
-    "androidx.lifecycle:lifecycle-livedata:aar": -933445806,
-    "androidx.lifecycle:lifecycle-runtime:aar": 1559415367,
-    "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar": 535791861,
-    "androidx.lifecycle:lifecycle-viewmodel:aar": 1845685019,
-    "androidx.loader:loader:aar": 490178753,
-    "androidx.profileinstaller:profileinstaller:aar": -684206219,
-    "androidx.savedstate:savedstate:aar": -2054725060,
-    "androidx.sqlite:sqlite-framework-android:aar": 2106697345,
-    "androidx.sqlite:sqlite-framework:aar": -96189885,
-    "androidx.sqlite:sqlite-jvm": -1917656341,
-    "androidx.sqlite:sqlite:aar": -1122222090,
-    "androidx.startup:startup-runtime:aar": 447286757,
-    "androidx.tracing:tracing:aar": -595933058,
-    "androidx.versionedparcelable:versionedparcelable:aar": -70049068,
-    "androidx.viewpager:viewpager:aar": -847994529,
-    "com.android.billingclient:billing:aar": -37493034,
+    "androidx.activity:activity:aar": -1308191262,
+    "androidx.annotation:annotation": -1255473229,
+    "androidx.annotation:annotation-experimental:aar": -1106280034,
+    "androidx.annotation:annotation-jvm": -238380216,
+    "androidx.appcompat:appcompat-resources:aar": 1879626570,
+    "androidx.appcompat:appcompat:aar": 388763569,
+    "androidx.arch.core:core-common": 451603655,
+    "androidx.arch.core:core-runtime:aar": -1620556102,
+    "androidx.autofill:autofill:aar": -456715785,
+    "androidx.collection:collection": 995919922,
+    "androidx.collection:collection-jvm": 369368079,
+    "androidx.concurrent:concurrent-futures": -944759079,
+    "androidx.core:core-ktx:aar": 1789025173,
+    "androidx.core:core:aar": 1358800245,
+    "androidx.cursoradapter:cursoradapter:aar": -1733763789,
+    "androidx.customview:customview:aar": -444920525,
+    "androidx.drawerlayout:drawerlayout:aar": 2134384595,
+    "androidx.emoji2:emoji2-views-helper:aar": 515719033,
+    "androidx.emoji2:emoji2:aar": -1105367913,
+    "androidx.fragment:fragment:aar": -1748757219,
+    "androidx.interpolator:interpolator:aar": -1102187773,
+    "androidx.lifecycle:lifecycle-common": 1587012042,
+    "androidx.lifecycle:lifecycle-livedata-core:aar": -285916809,
+    "androidx.lifecycle:lifecycle-livedata:aar": 427306238,
+    "androidx.lifecycle:lifecycle-process:aar": -1490851884,
+    "androidx.lifecycle:lifecycle-runtime:aar": -1561685017,
+    "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar": -1634801468,
+    "androidx.lifecycle:lifecycle-viewmodel:aar": 1999017411,
+    "androidx.loader:loader:aar": -1870751831,
+    "androidx.profileinstaller:profileinstaller:aar": 705285712,
+    "androidx.resourceinspection:resourceinspection-annotation": 1618808270,
+    "androidx.savedstate:savedstate:aar": 1177073615,
+    "androidx.sqlite:sqlite-framework-android:aar": 213383204,
+    "androidx.sqlite:sqlite-framework:aar": 1197132990,
+    "androidx.sqlite:sqlite-jvm": -2001705997,
+    "androidx.sqlite:sqlite:aar": 2028185289,
+    "androidx.startup:startup-runtime:aar": -663187435,
+    "androidx.swiperefreshlayout:swiperefreshlayout:aar": -1609489074,
+    "androidx.tracing:tracing:aar": 816330852,
+    "androidx.vectordrawable:vectordrawable-animated:aar": 324670288,
+    "androidx.vectordrawable:vectordrawable:aar": 1236807395,
+    "androidx.versionedparcelable:versionedparcelable:aar": -521456244,
+    "androidx.viewpager:viewpager:aar": 852336365,
+    "androidx.window:window-core": -1630750601,
+    "androidx.window:window-core-jvm": 1856855822,
+    "androidx.window:window:aar": -1243895933,
+    "com.android.billingclient:billing:aar": -1837435448,
+    "com.facebook.fbjni:fbjni:aar": 409630615,
+    "com.facebook.fresco:drawee:aar": -850265939,
+    "com.facebook.fresco:fbcore:aar": -1313986411,
+    "com.facebook.fresco:fresco:aar": 1430121745,
+    "com.facebook.fresco:imagepipeline-base:aar": -1148763413,
+    "com.facebook.fresco:imagepipeline-native:aar": -1757637821,
+    "com.facebook.fresco:imagepipeline-okhttp3:aar": -264359664,
+    "com.facebook.fresco:imagepipeline:aar": 6166739,
+    "com.facebook.fresco:memory-type-ashmem:aar": -1550154786,
+    "com.facebook.fresco:memory-type-java:aar": -194634960,
+    "com.facebook.fresco:memory-type-native:aar": -1709981146,
+    "com.facebook.fresco:middleware:aar": -1439506313,
+    "com.facebook.fresco:nativeimagefilters:aar": 289925955,
+    "com.facebook.fresco:nativeimagetranscoder:aar": 181561165,
+    "com.facebook.fresco:soloader:aar": 36417071,
+    "com.facebook.fresco:ui-common:aar": 382568156,
+    "com.facebook.fresco:ui-core:aar": -1620697070,
+    "com.facebook.fresco:urimod:aar": 1932762356,
+    "com.facebook.fresco:vito-source:aar": -1325362102,
+    "com.facebook.infer.annotation:infer-annotation": 139112115,
     "com.facebook.react:react-android": 653009564,
-    "com.facebook.react:react-android:aar:release": -50108418,
-    "com.google.android.datatransport:transport-api:aar": 1733732173,
-    "com.google.android.datatransport:transport-backend-cct:aar": -47076144,
-    "com.google.android.datatransport:transport-runtime:aar": 1313537788,
-    "com.google.android.gms:play-services-base:aar": -119343387,
-    "com.google.android.gms:play-services-basement:aar": -427317037,
-    "com.google.android.gms:play-services-location:aar": 1515086298,
-    "com.google.android.gms:play-services-places-placereport:aar": 402900770,
-    "com.google.android.gms:play-services-tasks:aar": 1112987722,
-    "com.google.firebase:firebase-encoders": 385838462,
-    "com.google.firebase:firebase-encoders-json:aar": 425247367,
-    "com.google.firebase:firebase-encoders-proto": -829394613,
+    "com.facebook.react:react-android:aar:release": 1609573172,
+    "com.facebook.soloader:annotation": 399608007,
+    "com.facebook.soloader:nativeloader": 1275333757,
+    "com.facebook.soloader:soloader:aar": 129190513,
+    "com.facebook.yoga:proguard-annotations": 1383582976,
+    "com.google.android.datatransport:transport-api:aar": -1148971213,
+    "com.google.android.datatransport:transport-backend-cct:aar": 1775580495,
+    "com.google.android.datatransport:transport-runtime:aar": -990418842,
+    "com.google.android.gms:play-services-base:aar": -1445703753,
+    "com.google.android.gms:play-services-basement:aar": -967167909,
+    "com.google.android.gms:play-services-location:aar": -558235790,
+    "com.google.android.gms:play-services-places-placereport:aar": 182146520,
+    "com.google.android.gms:play-services-tasks:aar": 892233472,
+    "com.google.code.findbugs:jsr305": -1038659426,
+    "com.google.firebase:firebase-encoders": 1798102372,
+    "com.google.firebase:firebase-encoders-json:aar": -1834743178,
+    "com.google.firebase:firebase-encoders-proto": -2073938894,
     "com.google.guava:listenablefuture": -534320814,
+    "com.parse.bolts:bolts-tasks": -1177529627,
+    "com.squareup.okhttp3:okhttp": 369006913,
+    "com.squareup.okhttp3:okhttp-urlconnection": 1305845001,
+    "com.squareup.okio:okio": 577193339,
     "javax.inject:javax.inject": -1284481446,
-    "org.jetbrains.kotlin:kotlin-stdlib": -1766098057,
-    "org.jetbrains.kotlin:kotlin-stdlib-common": 232999602,
-    "org.jetbrains.kotlinx:kotlinx-coroutines-android": -827259659,
+    "org.jetbrains.kotlin:kotlin-annotations-jvm": -1273351479,
+    "org.jetbrains.kotlin:kotlin-stdlib": 1551123796,
+    "org.jetbrains.kotlin:kotlin-stdlib-common": 2052822201,
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk7": -1936110605,
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk8": -1497130032,
+    "org.jetbrains.kotlinx:kotlinx-coroutines-android": 1273875051,
     "org.jetbrains.kotlinx:kotlinx-coroutines-bom": -966616507,
-    "org.jetbrains.kotlinx:kotlinx-coroutines-core": 138200339,
-    "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm": 1900664144,
+    "org.jetbrains.kotlinx:kotlinx-coroutines-core": 1937735444,
+    "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm": 1110120028,
     "org.jetbrains.kotlinx:kotlinx-serialization-bom": 1330917829,
-    "org.jetbrains.kotlinx:kotlinx-serialization-core": -1601953161,
-    "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm": -1725653168,
-    "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm": -781547941,
-    "org.jetbrains:annotations": 1311519737
+    "org.jetbrains.kotlinx:kotlinx-serialization-core": -2050934365,
+    "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm": -656674152,
+    "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm": 1519957929,
+    "org.jetbrains:annotations": 1311519737,
+    "org.jspecify:jspecify": -1402924792
   },
   "artifacts": {
     "androidx.activity:activity:aar": {
       "shasums": {
-        "jar": "1dce0705c334a6b2ef03382418dc7586f4e57ee23817267b403ea8cfc36c824e"
+        "jar": "e44b2032273387156982912c591ef7e2dd485ba0b2e689b528b5a42f271a4f27"
       },
-      "version": "1.2.3"
+      "version": "1.7.0"
     },
     "androidx.annotation:annotation": {
       "shasums": {
@@ -95,6 +143,18 @@
       },
       "version": "1.9.1"
     },
+    "androidx.appcompat:appcompat-resources:aar": {
+      "shasums": {
+        "jar": "55b6778602680f3c288ce350a2c2d3dd158d97dbffc63476275826655582c388"
+      },
+      "version": "1.7.0"
+    },
+    "androidx.appcompat:appcompat:aar": {
+      "shasums": {
+        "jar": "67189713b30a3fab6971713cc5fab1cb7f022bcf648a257563715c91d719d584"
+      },
+      "version": "1.7.0"
+    },
     "androidx.arch.core:core-common": {
       "shasums": {
         "jar": "65308a06b1c00ee186cb9e19321383f043b993813f1522c47f4a3e3303bdba41"
@@ -106,6 +166,12 @@
         "jar": "a1be5e0caa2b07623862af6ae21b3ab0718123245184d0e30dea81b53f990a47"
       },
       "version": "2.2.0"
+    },
+    "androidx.autofill:autofill:aar": {
+      "shasums": {
+        "jar": "b5a217cee7724ea42a382965a9b22a330b988d62cb97abe1b1af50e54370c322"
+      },
+      "version": "1.3.0"
     },
     "androidx.collection:collection": {
       "shasums": {
@@ -137,17 +203,41 @@
       },
       "version": "1.15.0"
     },
+    "androidx.cursoradapter:cursoradapter:aar": {
+      "shasums": {
+        "jar": "a81c8fe78815fa47df5b749deb52727ad11f9397da58b16017f4eb2c11e28564"
+      },
+      "version": "1.0.0"
+    },
     "androidx.customview:customview:aar": {
       "shasums": {
         "jar": "20e5b8f6526a34595a604f56718da81167c0b40a7a94a57daa355663f2594df2"
       },
       "version": "1.0.0"
     },
+    "androidx.drawerlayout:drawerlayout:aar": {
+      "shasums": {
+        "jar": "9402442cdc5a43cf62fb14f8cf98c63342d4d9d9b805c8033c6cf7e802749ac1"
+      },
+      "version": "1.0.0"
+    },
+    "androidx.emoji2:emoji2-views-helper:aar": {
+      "shasums": {
+        "jar": "9a1351295a4f739df0efe8344adaa9afb34856c3af584d4a9afbec105a45b90b"
+      },
+      "version": "1.3.0"
+    },
+    "androidx.emoji2:emoji2:aar": {
+      "shasums": {
+        "jar": "2bf23818b23a996ddaa1b5fd5bb32129daff6bbb2dce15166e2fccdd2010b1a5"
+      },
+      "version": "1.3.0"
+    },
     "androidx.fragment:fragment:aar": {
       "shasums": {
-        "jar": "a14c8b8f2153f128e800fbd266a6beab1c283982a29ec570d2cc05d307d81496"
+        "jar": "bc3c2431dda42e94bb9511c587eae890d276e4aafe393a8da7b00169186dafde"
       },
-      "version": "1.1.0"
+      "version": "1.5.4"
     },
     "androidx.interpolator:interpolator:aar": {
       "shasums": {
@@ -170,6 +260,12 @@
     "androidx.lifecycle:lifecycle-livedata:aar": {
       "shasums": {
         "jar": "67359f609dfc2bf65da1270b23033f856064ec279f058e0a70c715f7c9003031"
+      },
+      "version": "2.6.2"
+    },
+    "androidx.lifecycle:lifecycle-process:aar": {
+      "shasums": {
+        "jar": "0f33b1bd017f965a6afb2e7bf3e3bd343c624061c1986dea8ba2469d04349437"
       },
       "version": "2.6.2"
     },
@@ -199,9 +295,15 @@
     },
     "androidx.profileinstaller:profileinstaller:aar": {
       "shasums": {
-        "jar": "34e8b2bfc74e23c1525e3da903ae449b7f1b440aef45e18159ee470e91997f48"
+        "jar": "d0e402ec31f24028a1dc7eb6a0a3f9d9635c1459392cd734396343b73d673948"
       },
-      "version": "1.3.0"
+      "version": "1.3.1"
+    },
+    "androidx.resourceinspection:resourceinspection-annotation": {
+      "shasums": {
+        "jar": "8cff870ec6fb31db48a52f4a792335b4bf8de07e03bd37823181526433ccd5cb"
+      },
+      "version": "1.0.1"
     },
     "androidx.savedstate:savedstate:aar": {
       "shasums": {
@@ -239,11 +341,29 @@
       },
       "version": "1.1.1"
     },
+    "androidx.swiperefreshlayout:swiperefreshlayout:aar": {
+      "shasums": {
+        "jar": "2ce7906cd1dea05aec81975db22d54382359c05a21b2527ad848bc60f6b27293"
+      },
+      "version": "1.1.0"
+    },
     "androidx.tracing:tracing:aar": {
       "shasums": {
         "jar": "6faa90390d1fdbf0adb9a99bf99de67b94c6c6f35aea9510593a9d17973736a2"
       },
       "version": "1.2.0"
+    },
+    "androidx.vectordrawable:vectordrawable-animated:aar": {
+      "shasums": {
+        "jar": "76da2c502371d9c38054df5e2b248d00da87809ed058f3363eae87ce5e2403f8"
+      },
+      "version": "1.1.0"
+    },
+    "androidx.vectordrawable:vectordrawable:aar": {
+      "shasums": {
+        "jar": "46fd633ac01b49b7fcabc263bf098c5a8b9e9a69774d234edcca04fb02df8e26"
+      },
+      "version": "1.1.0"
     },
     "androidx.versionedparcelable:versionedparcelable:aar": {
       "shasums": {
@@ -257,11 +377,149 @@
       },
       "version": "1.0.0"
     },
+    "androidx.window:window-core": {
+      "shasums": {
+        "jar": null
+      },
+      "version": "1.5.1"
+    },
+    "androidx.window:window-core-jvm": {
+      "shasums": {
+        "jar": "c3bef837bbeb9caeb9ac2570ee015f6fa02cd80cdfa30a2e360f9671e60737e0"
+      },
+      "version": "1.5.1"
+    },
+    "androidx.window:window:aar": {
+      "shasums": {
+        "jar": "3c3061966f012fc22f2e99701f683e82e732435ae2f2a1d5b2f99d82bb7b8864"
+      },
+      "version": "1.5.1"
+    },
     "com.android.billingclient:billing:aar": {
       "shasums": {
         "jar": "d28286d4e4c18725510980de01211d9b72501e7146d96817fa0c9999af9b0d22"
       },
       "version": "9.1.0"
+    },
+    "com.facebook.fbjni:fbjni:aar": {
+      "shasums": {
+        "jar": "7e319ae110ac5e5ef18904170aea5c3e753e915d196699d7fd39d36c8e1dfe36"
+      },
+      "version": "0.7.0"
+    },
+    "com.facebook.fresco:drawee:aar": {
+      "shasums": {
+        "jar": "9d3a8294b7c5ac691993c469986f6c9b2325dc099a9850a0613c7bdea16ee188"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:fbcore:aar": {
+      "shasums": {
+        "jar": "84bf53391952f657dcd855aea304338cb5874acc5cf0cb2328e1b72e56208dde"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:fresco:aar": {
+      "shasums": {
+        "jar": "7781655f04a3699830b1773863da43c73e11787deed7a298ed18fc77589c4587"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:imagepipeline-base:aar": {
+      "shasums": {
+        "jar": "0e11ba10b15daa902f29f6b4addead9c3c0df42ef59ea8737eda09bc05f22111"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:imagepipeline-native:aar": {
+      "shasums": {
+        "jar": "cf853f5aaf7cb519db246dcfe71dcfcc78a4606c28520d0a93d957a584a0e4a4"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:imagepipeline-okhttp3:aar": {
+      "shasums": {
+        "jar": "846137fbafbe38367af5c838164235ea5dcb039a2878067e658f35632d2a9f57"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:imagepipeline:aar": {
+      "shasums": {
+        "jar": "eaa89d908d53b57c5b959f346cdfc3feee2c0216291570a3c43161be65b17027"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:memory-type-ashmem:aar": {
+      "shasums": {
+        "jar": "9c6378341e740bfb6276075d4a78f4212184dc15a0d61dfa2088e3ed894bdfe7"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:memory-type-java:aar": {
+      "shasums": {
+        "jar": "1230d2928b1c84f09fe2bf66ce42bfe5a052335771ca4d6325beb7c578596959"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:memory-type-native:aar": {
+      "shasums": {
+        "jar": "43c3d45c5081ad81c4d21c78bf34ea95931e0900b1d91f7e651e60711eff9eef"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:middleware:aar": {
+      "shasums": {
+        "jar": "df47bd0fdebd7791b34469df39a3ed13078175b29fb8e131d22f494ce1c1785e"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:nativeimagefilters:aar": {
+      "shasums": {
+        "jar": "7e999f857e532f4520a82a1410e4f23f14a7edb2e2ac38d01cb5c31fed5cf446"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:nativeimagetranscoder:aar": {
+      "shasums": {
+        "jar": "18413e990db85ee7446082bdc6ed94c4d00deb8150a77d62386ebabcff9a41a0"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:soloader:aar": {
+      "shasums": {
+        "jar": "fbbe0a37d91b86d4320d0728040c3264599a94b31a1de41f92a25e147f7f35ef"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:ui-common:aar": {
+      "shasums": {
+        "jar": "60ddce78196fda40e0b5dacc6c7960dd921eeea4326e0e0578019196777794f1"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:ui-core:aar": {
+      "shasums": {
+        "jar": "682b761f235ca85d7188b61fb1dda26f8f1849a22b5e7640e0b51aa6572104a8"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:urimod:aar": {
+      "shasums": {
+        "jar": "7d37be1a1789d29e4a7379ca2029a9f870e7a30f1d83094a4f6b902783beeb0c"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.fresco:vito-source:aar": {
+      "shasums": {
+        "jar": "cbc2d4a65fc0c67475876625239abef99103d5a3b4bf3fe986140c100a440359"
+      },
+      "version": "3.7.0"
+    },
+    "com.facebook.infer.annotation:infer-annotation": {
+      "shasums": {
+        "jar": "caefba935643dc962758a760f1627a402215af034d96c0f484d63b7fddca992f"
+      },
+      "version": "0.18.0"
     },
     "com.facebook.react:react-android": {
       "shasums": {
@@ -274,6 +532,30 @@
         "release": "741849961df078890946c28aaeec6519a11e440940572d85126e6ea1539613a4"
       },
       "version": "0.87.1"
+    },
+    "com.facebook.soloader:annotation": {
+      "shasums": {
+        "jar": "f6ddd55268bf1824225df7a35ec1b8b33cf98855a6c9c153d189899e5ef4a418"
+      },
+      "version": "0.12.1"
+    },
+    "com.facebook.soloader:nativeloader": {
+      "shasums": {
+        "jar": "971ded86009c0ac56fb2275e128f852e7dcbc41a40cd799688f8a1aebde5195d"
+      },
+      "version": "0.12.1"
+    },
+    "com.facebook.soloader:soloader:aar": {
+      "shasums": {
+        "jar": "5bc6e15d712f90a0a3890d22db0eef5fe89ef3fcb3ae8aa1f8f6a6d99547c892"
+      },
+      "version": "0.12.1"
+    },
+    "com.facebook.yoga:proguard-annotations": {
+      "shasums": {
+        "jar": "fb65f706eea05b5640fb6b93d21d6c41f9e2b4e7a6e6d9f28ce9d2a574474995"
+      },
+      "version": "1.19.0"
     },
     "com.google.android.datatransport:transport-api:aar": {
       "shasums": {
@@ -323,6 +605,12 @@
       },
       "version": "18.2.0"
     },
+    "com.google.code.findbugs:jsr305": {
+      "shasums": {
+        "jar": "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7"
+      },
+      "version": "3.0.2"
+    },
     "com.google.firebase:firebase-encoders": {
       "shasums": {
         "jar": "282a5a703f9b7eb56508dde97ea918e95d73318b157050f457f7a86dca750150"
@@ -347,23 +635,65 @@
       },
       "version": "1.0"
     },
+    "com.parse.bolts:bolts-tasks": {
+      "shasums": {
+        "jar": "9bc51e3eca853a9df2fbac62c2317db2c9ea619b95b5531c30440243daaccee2"
+      },
+      "version": "1.4.0"
+    },
+    "com.squareup.okhttp3:okhttp": {
+      "shasums": {
+        "jar": "3b2ee1b768c1df28c30d2fe6b38dda4d2c519210e30ca3d27950618c563c92de"
+      },
+      "version": "4.9.2"
+    },
+    "com.squareup.okhttp3:okhttp-urlconnection": {
+      "shasums": {
+        "jar": "0e1c39aa89668f9625c9207acd4a8784dc868ad0d5a2011d9e15e0674f3b7d11"
+      },
+      "version": "4.9.2"
+    },
+    "com.squareup.okio:okio": {
+      "shasums": {
+        "jar": "b9255c163b7edc0b8406559d66579c6c32dea01f691943bac5d3fdbd10f69b44"
+      },
+      "version": "2.9.0"
+    },
     "javax.inject:javax.inject": {
       "shasums": {
         "jar": "91c77044a50c481636c32d916fd89c9118a72195390452c81065080f957de7ff"
       },
       "version": "1"
     },
+    "org.jetbrains.kotlin:kotlin-annotations-jvm": {
+      "shasums": {
+        "jar": "3ee3a56dd451e33f8352e0d2803a55ca1b9156d7f8a8e0759bf8e187ff8db24a"
+      },
+      "version": "1.3.72"
+    },
     "org.jetbrains.kotlin:kotlin-stdlib": {
       "shasums": {
-        "jar": "65d12d85a3b865c160db9147851712a64b10dadd68b22eea22a95bf8a8670dca"
+        "jar": "9c67cc79efd6b9215b49d2a4308f5f3433537376c7c88e89bdd6729bd096e61a"
       },
-      "version": "2.2.0"
+      "version": "2.2.10"
     },
     "org.jetbrains.kotlin:kotlin-stdlib-common": {
       "shasums": {
         "jar": null
       },
-      "version": "2.2.0"
+      "version": "2.2.10"
+    },
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk7": {
+      "shasums": {
+        "jar": "4c889d1d9803f5f2eb6c1592a6b7e62369ac7660c9eee15aba16fec059163666"
+      },
+      "version": "1.8.0"
+    },
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk8": {
+      "shasums": {
+        "jar": "05b62804441b0c9a1920b6b7d5cf7329a4e24b6258478e32b1f046ca01900946"
+      },
+      "version": "1.8.0"
     },
     "org.jetbrains.kotlinx:kotlinx-coroutines-android": {
       "shasums": {
@@ -418,31 +748,50 @@
         "jar": "7b0f19724082cbfcbc66e5abea2b9bc92cf08a1ea11e191933ed43801eb3cd05"
       },
       "version": "23.0.0"
+    },
+    "org.jspecify:jspecify": {
+      "shasums": {
+        "jar": "1fad6e6be7557781e4d33729d49ae1cdc8fdda6fe477bb0cc68ce351eafdfbab"
+      },
+      "version": "1.0.0"
     }
   },
   "conflict_resolution": {
-    "androidx.activity:activity:aar:1.0.0": "androidx.activity:activity:aar:1.2.3",
+    "androidx.activity:activity:aar:1.2.3": "androidx.activity:activity:aar:1.7.0",
+    "androidx.annotation:annotation-experimental:aar:1.0.0": "androidx.annotation:annotation-experimental:aar:1.4.1",
     "androidx.annotation:annotation:1.3.0": "androidx.annotation:annotation:1.9.1",
     "androidx.arch.core:core-common:2.1.0": "androidx.arch.core:core-common:2.2.0",
     "androidx.arch.core:core-runtime:aar:2.1.0": "androidx.arch.core:core-runtime:aar:2.2.0",
-    "androidx.collection:collection:1.0.0": "androidx.collection:collection:1.4.2",
+    "androidx.collection:collection:1.4.0": "androidx.collection:collection:1.4.2",
     "androidx.concurrent:concurrent-futures:1.0.0": "androidx.concurrent:concurrent-futures:1.1.0",
-    "androidx.core:core-ktx:aar:1.2.0": "androidx.core:core-ktx:aar:1.15.0",
-    "androidx.core:core:aar:1.0.0": "androidx.core:core:aar:1.15.0",
-    "androidx.fragment:fragment:aar:1.0.0": "androidx.fragment:fragment:aar:1.1.0",
+    "androidx.core:core-ktx:aar:1.13.0": "androidx.core:core-ktx:aar:1.15.0",
+    "androidx.core:core:aar:1.3.0": "androidx.core:core:aar:1.15.0",
+    "androidx.emoji2:emoji2-views-helper:aar:1.2.0": "androidx.emoji2:emoji2-views-helper:aar:1.3.0",
+    "androidx.fragment:fragment:aar:1.0.0": "androidx.fragment:fragment:aar:1.5.4",
     "androidx.lifecycle:lifecycle-common:2.6.1": "androidx.lifecycle:lifecycle-common:2.6.2",
+    "androidx.lifecycle:lifecycle-livedata-core:aar:2.5.1": "androidx.lifecycle:lifecycle-livedata-core:aar:2.6.2",
     "androidx.lifecycle:lifecycle-livedata:aar:2.0.0": "androidx.lifecycle:lifecycle-livedata:aar:2.6.2",
-    "androidx.lifecycle:lifecycle-runtime:aar:2.3.1": "androidx.lifecycle:lifecycle-runtime:aar:2.6.2",
-    "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar:2.3.1": "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar:2.6.2",
+    "androidx.lifecycle:lifecycle-process:aar:2.4.1": "androidx.lifecycle:lifecycle-process:aar:2.6.2",
+    "androidx.lifecycle:lifecycle-runtime:aar:2.6.1": "androidx.lifecycle:lifecycle-runtime:aar:2.6.2",
+    "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar:2.5.1": "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar:2.6.2",
     "androidx.lifecycle:lifecycle-viewmodel:aar:2.0.0": "androidx.lifecycle:lifecycle-viewmodel:aar:2.6.2",
-    "androidx.savedstate:savedstate:aar:1.1.0": "androidx.savedstate:savedstate:aar:1.2.1",
+    "androidx.profileinstaller:profileinstaller:aar:1.3.0": "androidx.profileinstaller:profileinstaller:aar:1.3.1",
+    "androidx.savedstate:savedstate:aar:1.2.0": "androidx.savedstate:savedstate:aar:1.2.1",
+    "androidx.startup:startup-runtime:aar:1.0.0": "androidx.startup:startup-runtime:aar:1.1.1",
     "androidx.tracing:tracing:aar:1.0.0": "androidx.tracing:tracing:aar:1.2.0",
+    "com.facebook.soloader:annotation:0.11.0": "com.facebook.soloader:annotation:0.12.1",
+    "com.facebook.soloader:nativeloader:0.10.5": "com.facebook.soloader:nativeloader:0.12.1",
+    "com.facebook.soloader:soloader:aar:0.11.0": "com.facebook.soloader:soloader:aar:0.12.1",
     "com.google.android.gms:play-services-base:aar:18.0.0": "com.google.android.gms:play-services-base:aar:18.5.0",
     "com.google.android.gms:play-services-basement:aar:17.0.0": "com.google.android.gms:play-services-basement:aar:18.9.0",
     "com.google.android.gms:play-services-tasks:aar:18.0.0": "com.google.android.gms:play-services-tasks:aar:18.2.0",
-    "org.jetbrains.kotlin:kotlin-stdlib-common": "org.jetbrains.kotlin:kotlin-stdlib-common:2.2.0",
-    "org.jetbrains.kotlin:kotlin-stdlib:2.0.0": "org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-    "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4": "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0",
+    "com.google.code.findbugs:jsr305:3.0.1": "com.google.code.findbugs:jsr305:3.0.2",
+    "com.squareup.okhttp3:okhttp:3.14.9": "com.squareup.okhttp3:okhttp:4.9.2",
+    "com.squareup.okio:okio:2.8.0": "com.squareup.okio:okio:2.9.0",
+    "org.jetbrains.kotlin:kotlin-stdlib-common": "org.jetbrains.kotlin:kotlin-stdlib-common:2.2.10",
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.10": "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0",
+    "org.jetbrains.kotlin:kotlin-stdlib:2.0.0": "org.jetbrains.kotlin:kotlin-stdlib:2.2.10",
+    "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1": "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0",
     "org.jetbrains:annotations:13.0": "org.jetbrains:annotations:23.0.0"
   },
   "dependencies": {
@@ -453,8 +802,10 @@
       "androidx.lifecycle:lifecycle-runtime:aar",
       "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar",
       "androidx.lifecycle:lifecycle-viewmodel:aar",
+      "androidx.profileinstaller:profileinstaller:aar",
       "androidx.savedstate:savedstate:aar",
-      "androidx.tracing:tracing:aar"
+      "androidx.tracing:tracing:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
     ],
     "androidx.annotation:annotation": [
       "androidx.annotation:annotation-jvm"
@@ -465,12 +816,41 @@
     "androidx.annotation:annotation-jvm": [
       "org.jetbrains.kotlin:kotlin-stdlib"
     ],
+    "androidx.appcompat:appcompat-resources:aar": [
+      "androidx.annotation:annotation",
+      "androidx.collection:collection",
+      "androidx.core:core:aar",
+      "androidx.vectordrawable:vectordrawable-animated:aar",
+      "androidx.vectordrawable:vectordrawable:aar"
+    ],
+    "androidx.appcompat:appcompat:aar": [
+      "androidx.activity:activity:aar",
+      "androidx.annotation:annotation",
+      "androidx.appcompat:appcompat-resources:aar",
+      "androidx.collection:collection",
+      "androidx.core:core-ktx:aar",
+      "androidx.core:core:aar",
+      "androidx.cursoradapter:cursoradapter:aar",
+      "androidx.drawerlayout:drawerlayout:aar",
+      "androidx.emoji2:emoji2-views-helper:aar",
+      "androidx.emoji2:emoji2:aar",
+      "androidx.fragment:fragment:aar",
+      "androidx.lifecycle:lifecycle-runtime:aar",
+      "androidx.lifecycle:lifecycle-viewmodel:aar",
+      "androidx.profileinstaller:profileinstaller:aar",
+      "androidx.resourceinspection:resourceinspection-annotation",
+      "androidx.savedstate:savedstate:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
     "androidx.arch.core:core-common": [
       "androidx.annotation:annotation"
     ],
     "androidx.arch.core:core-runtime:aar": [
       "androidx.annotation:annotation",
       "androidx.arch.core:core-common"
+    ],
+    "androidx.autofill:autofill:aar": [
+      "androidx.core:core:aar"
     ],
     "androidx.collection:collection": [
       "androidx.collection:collection-jvm"
@@ -499,18 +879,43 @@
       "androidx.versionedparcelable:versionedparcelable:aar",
       "org.jetbrains.kotlin:kotlin-stdlib"
     ],
+    "androidx.cursoradapter:cursoradapter:aar": [
+      "androidx.annotation:annotation"
+    ],
     "androidx.customview:customview:aar": [
       "androidx.annotation:annotation",
       "androidx.core:core:aar"
     ],
-    "androidx.fragment:fragment:aar": [
-      "androidx.activity:activity:aar",
+    "androidx.drawerlayout:drawerlayout:aar": [
+      "androidx.annotation:annotation",
+      "androidx.core:core:aar",
+      "androidx.customview:customview:aar"
+    ],
+    "androidx.emoji2:emoji2-views-helper:aar": [
+      "androidx.collection:collection",
+      "androidx.core:core:aar",
+      "androidx.emoji2:emoji2:aar"
+    ],
+    "androidx.emoji2:emoji2:aar": [
       "androidx.annotation:annotation",
       "androidx.collection:collection",
       "androidx.core:core:aar",
+      "androidx.lifecycle:lifecycle-process:aar",
+      "androidx.startup:startup-runtime:aar"
+    ],
+    "androidx.fragment:fragment:aar": [
+      "androidx.activity:activity:aar",
+      "androidx.annotation:annotation",
+      "androidx.annotation:annotation-experimental:aar",
+      "androidx.collection:collection",
+      "androidx.core:core-ktx:aar",
+      "androidx.lifecycle:lifecycle-livedata-core:aar",
+      "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar",
       "androidx.lifecycle:lifecycle-viewmodel:aar",
       "androidx.loader:loader:aar",
-      "androidx.viewpager:viewpager:aar"
+      "androidx.savedstate:savedstate:aar",
+      "androidx.viewpager:viewpager:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
     ],
     "androidx.interpolator:interpolator:aar": [
       "androidx.annotation:annotation"
@@ -530,6 +935,12 @@
       "androidx.arch.core:core-common",
       "androidx.arch.core:core-runtime:aar",
       "androidx.lifecycle:lifecycle-livedata-core:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "androidx.lifecycle:lifecycle-process:aar": [
+      "androidx.annotation:annotation",
+      "androidx.lifecycle:lifecycle-runtime:aar",
+      "androidx.startup:startup-runtime:aar",
       "org.jetbrains.kotlin:kotlin-stdlib"
     ],
     "androidx.lifecycle:lifecycle-runtime:aar": [
@@ -565,6 +976,9 @@
       "androidx.startup:startup-runtime:aar",
       "com.google.guava:listenablefuture"
     ],
+    "androidx.resourceinspection:resourceinspection-annotation": [
+      "androidx.annotation:annotation"
+    ],
     "androidx.savedstate:savedstate:aar": [
       "androidx.annotation:annotation",
       "androidx.arch.core:core-common",
@@ -590,8 +1004,23 @@
       "androidx.annotation:annotation",
       "androidx.tracing:tracing:aar"
     ],
+    "androidx.swiperefreshlayout:swiperefreshlayout:aar": [
+      "androidx.annotation:annotation",
+      "androidx.core:core:aar",
+      "androidx.interpolator:interpolator:aar"
+    ],
     "androidx.tracing:tracing:aar": [
       "androidx.annotation:annotation"
+    ],
+    "androidx.vectordrawable:vectordrawable-animated:aar": [
+      "androidx.collection:collection",
+      "androidx.interpolator:interpolator:aar",
+      "androidx.vectordrawable:vectordrawable:aar"
+    ],
+    "androidx.vectordrawable:vectordrawable:aar": [
+      "androidx.annotation:annotation",
+      "androidx.collection:collection",
+      "androidx.core:core:aar"
     ],
     "androidx.versionedparcelable:versionedparcelable:aar": [
       "androidx.annotation:annotation",
@@ -601,6 +1030,22 @@
       "androidx.annotation:annotation",
       "androidx.core:core:aar",
       "androidx.customview:customview:aar"
+    ],
+    "androidx.window:window-core": [
+      "androidx.window:window-core-jvm"
+    ],
+    "androidx.window:window-core-jvm": [
+      "androidx.annotation:annotation",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "androidx.window:window:aar": [
+      "androidx.annotation:annotation",
+      "androidx.collection:collection",
+      "androidx.core:core:aar",
+      "androidx.window:window-core",
+      "org.jetbrains.kotlin:kotlin-stdlib",
+      "org.jetbrains.kotlinx:kotlinx-coroutines-android",
+      "org.jspecify:jspecify"
     ],
     "com.android.billingclient:billing:aar": [
       "androidx.activity:activity:aar",
@@ -612,6 +1057,171 @@
       "com.google.android.gms:play-services-basement:aar",
       "com.google.android.gms:play-services-location:aar",
       "com.google.android.gms:play-services-tasks:aar"
+    ],
+    "com.facebook.fbjni:fbjni:aar": [
+      "com.facebook.soloader:nativeloader"
+    ],
+    "com.facebook.fresco:drawee:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline-native:aar",
+      "com.facebook.fresco:imagepipeline:aar",
+      "com.facebook.fresco:memory-type-ashmem:aar",
+      "com.facebook.fresco:memory-type-java:aar",
+      "com.facebook.fresco:memory-type-native:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.fresco:ui-common:aar",
+      "com.facebook.fresco:ui-core:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:fbcore:aar": [
+      "androidx.core:core:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:fresco:aar": [
+      "com.facebook.fresco:drawee:aar",
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline-native:aar",
+      "com.facebook.fresco:imagepipeline:aar",
+      "com.facebook.fresco:memory-type-ashmem:aar",
+      "com.facebook.fresco:memory-type-java:aar",
+      "com.facebook.fresco:memory-type-native:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.fresco:nativeimagefilters:aar",
+      "com.facebook.fresco:nativeimagetranscoder:aar",
+      "com.facebook.fresco:soloader:aar",
+      "com.facebook.fresco:ui-common:aar",
+      "com.facebook.fresco:ui-core:aar",
+      "com.facebook.soloader:nativeloader",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:imagepipeline-base:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.infer.annotation:infer-annotation",
+      "com.facebook.soloader:annotation",
+      "com.parse.bolts:bolts-tasks",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:imagepipeline-native:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.soloader:soloader:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:imagepipeline-okhttp3:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline-native:aar",
+      "com.facebook.fresco:imagepipeline:aar",
+      "com.facebook.fresco:memory-type-ashmem:aar",
+      "com.facebook.fresco:memory-type-java:aar",
+      "com.facebook.fresco:memory-type-native:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.squareup.okhttp3:okhttp",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:imagepipeline:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline-base:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.fresco:urimod:aar",
+      "com.facebook.soloader:annotation",
+      "com.facebook.soloader:nativeloader",
+      "com.parse.bolts:bolts-tasks",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:memory-type-ashmem:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline:aar"
+    ],
+    "com.facebook.fresco:memory-type-java:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline-native:aar",
+      "com.facebook.fresco:imagepipeline:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:memory-type-native:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline-native:aar",
+      "com.facebook.fresco:imagepipeline:aar",
+      "com.facebook.soloader:nativeloader"
+    ],
+    "com.facebook.fresco:middleware:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:ui-common:aar",
+      "com.facebook.fresco:ui-core:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:nativeimagefilters:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline-native:aar",
+      "com.facebook.fresco:imagepipeline:aar",
+      "com.facebook.fresco:memory-type-ashmem:aar",
+      "com.facebook.fresco:memory-type-java:aar",
+      "com.facebook.fresco:memory-type-native:aar",
+      "com.facebook.soloader:nativeloader",
+      "com.parse.bolts:bolts-tasks",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:nativeimagetranscoder:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:imagepipeline-base:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.soloader:nativeloader",
+      "com.parse.bolts:bolts-tasks"
+    ],
+    "com.facebook.fresco:soloader:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.soloader:soloader:aar"
+    ],
+    "com.facebook.fresco:ui-common:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:ui-core:aar": [
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:urimod:aar": [
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:ui-core:aar",
+      "com.facebook.fresco:vito-source:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.fresco:vito-source:aar": [
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.fresco:ui-core:aar",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.infer.annotation:infer-annotation": [
+      "com.google.code.findbugs:jsr305",
+      "org.jetbrains.kotlin:kotlin-annotations-jvm"
+    ],
+    "com.facebook.react:react-android:aar:release": [
+      "androidx.appcompat:appcompat-resources:aar",
+      "androidx.appcompat:appcompat:aar",
+      "androidx.autofill:autofill:aar",
+      "androidx.collection:collection",
+      "androidx.swiperefreshlayout:swiperefreshlayout:aar",
+      "androidx.tracing:tracing:aar",
+      "androidx.window:window:aar",
+      "com.facebook.fbjni:fbjni:aar",
+      "com.facebook.fresco:fresco:aar",
+      "com.facebook.fresco:imagepipeline-okhttp3:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.fresco:ui-common:aar",
+      "com.facebook.infer.annotation:infer-annotation",
+      "com.facebook.soloader:soloader:aar",
+      "com.facebook.yoga:proguard-annotations",
+      "com.google.code.findbugs:jsr305",
+      "com.squareup.okhttp3:okhttp",
+      "com.squareup.okhttp3:okhttp-urlconnection",
+      "com.squareup.okio:okio",
+      "javax.inject:javax.inject",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.facebook.soloader:soloader:aar": [
+      "com.facebook.soloader:annotation",
+      "com.facebook.soloader:nativeloader"
     ],
     "com.google.android.datatransport:transport-api:aar": [
       "androidx.annotation:annotation"
@@ -665,11 +1275,30 @@
       "androidx.annotation:annotation",
       "com.google.firebase:firebase-encoders"
     ],
+    "com.squareup.okhttp3:okhttp": [
+      "com.squareup.okio:okio",
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "com.squareup.okhttp3:okhttp-urlconnection": [
+      "com.squareup.okhttp3:okhttp",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    ],
+    "com.squareup.okio:okio": [
+      "org.jetbrains.kotlin:kotlin-stdlib",
+      "org.jetbrains.kotlin:kotlin-stdlib-common"
+    ],
     "org.jetbrains.kotlin:kotlin-stdlib": [
       "org.jetbrains:annotations"
     ],
     "org.jetbrains.kotlin:kotlin-stdlib-common": [
       "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk7": [
+      "org.jetbrains.kotlin:kotlin-stdlib"
+    ],
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk8": [
+      "org.jetbrains.kotlin:kotlin-stdlib",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
     ],
     "org.jetbrains.kotlinx:kotlinx-coroutines-android": [
       "org.jetbrains.kotlin:kotlin-stdlib",
@@ -717,8 +1346,32 @@
     "androidx.lifecycle:lifecycle-common": [
       "androidx.lifecycle"
     ],
+    "androidx.resourceinspection:resourceinspection-annotation": [
+      "androidx.resourceinspection.annotation"
+    ],
     "androidx.sqlite:sqlite-jvm": [
       "androidx.sqlite"
+    ],
+    "androidx.window:window-core-jvm": [
+      "androidx.window.core",
+      "androidx.window.core.layout"
+    ],
+    "com.facebook.infer.annotation:infer-annotation": [
+      "com.facebook.infer.annotation"
+    ],
+    "com.facebook.soloader:annotation": [
+      "com.facebook.soloader"
+    ],
+    "com.facebook.soloader:nativeloader": [
+      "com.facebook.soloader.nativeloader"
+    ],
+    "com.facebook.yoga:proguard-annotations": [
+      "com.facebook.proguard.annotations"
+    ],
+    "com.google.code.findbugs:jsr305": [
+      "javax.annotation",
+      "javax.annotation.concurrent",
+      "javax.annotation.meta"
     ],
     "com.google.firebase:firebase-encoders": [
       "com.google.firebase.encoders",
@@ -731,8 +1384,40 @@
     "com.google.guava:listenablefuture": [
       "com.google.common.util.concurrent"
     ],
+    "com.parse.bolts:bolts-tasks": [
+      "bolts"
+    ],
+    "com.squareup.okhttp3:okhttp": [
+      "okhttp3",
+      "okhttp3.internal",
+      "okhttp3.internal.authenticator",
+      "okhttp3.internal.cache",
+      "okhttp3.internal.cache2",
+      "okhttp3.internal.concurrent",
+      "okhttp3.internal.connection",
+      "okhttp3.internal.http",
+      "okhttp3.internal.http1",
+      "okhttp3.internal.http2",
+      "okhttp3.internal.io",
+      "okhttp3.internal.platform",
+      "okhttp3.internal.platform.android",
+      "okhttp3.internal.proxy",
+      "okhttp3.internal.publicsuffix",
+      "okhttp3.internal.tls",
+      "okhttp3.internal.ws"
+    ],
+    "com.squareup.okhttp3:okhttp-urlconnection": [
+      "okhttp3"
+    ],
+    "com.squareup.okio:okio": [
+      "okio",
+      "okio.internal"
+    ],
     "javax.inject:javax.inject": [
       "javax.inject"
+    ],
+    "org.jetbrains.kotlin:kotlin-annotations-jvm": [
+      "kotlin.annotations.jvm"
     ],
     "org.jetbrains.kotlin:kotlin-stdlib": [
       "kotlin",
@@ -817,6 +1502,9 @@
     "org.jetbrains:annotations": [
       "org.intellij.lang.annotations",
       "org.jetbrains.annotations"
+    ],
+    "org.jspecify:jspecify": [
+      "org.jspecify.annotations"
     ]
   },
   "repositories": {
@@ -824,30 +1512,44 @@
       "androidx.activity:activity:aar",
       "androidx.annotation:annotation-experimental:aar",
       "androidx.annotation:annotation-jvm",
+      "androidx.appcompat:appcompat-resources:aar",
+      "androidx.appcompat:appcompat:aar",
       "androidx.arch.core:core-common",
       "androidx.arch.core:core-runtime:aar",
+      "androidx.autofill:autofill:aar",
       "androidx.collection:collection-jvm",
       "androidx.concurrent:concurrent-futures",
       "androidx.core:core-ktx:aar",
       "androidx.core:core:aar",
+      "androidx.cursoradapter:cursoradapter:aar",
       "androidx.customview:customview:aar",
+      "androidx.drawerlayout:drawerlayout:aar",
+      "androidx.emoji2:emoji2-views-helper:aar",
+      "androidx.emoji2:emoji2:aar",
       "androidx.fragment:fragment:aar",
       "androidx.interpolator:interpolator:aar",
       "androidx.lifecycle:lifecycle-common",
       "androidx.lifecycle:lifecycle-livedata-core:aar",
       "androidx.lifecycle:lifecycle-livedata:aar",
+      "androidx.lifecycle:lifecycle-process:aar",
       "androidx.lifecycle:lifecycle-runtime:aar",
       "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar",
       "androidx.lifecycle:lifecycle-viewmodel:aar",
       "androidx.loader:loader:aar",
       "androidx.profileinstaller:profileinstaller:aar",
+      "androidx.resourceinspection:resourceinspection-annotation",
       "androidx.savedstate:savedstate:aar",
       "androidx.sqlite:sqlite-framework-android:aar",
       "androidx.sqlite:sqlite-jvm",
       "androidx.startup:startup-runtime:aar",
+      "androidx.swiperefreshlayout:swiperefreshlayout:aar",
       "androidx.tracing:tracing:aar",
+      "androidx.vectordrawable:vectordrawable-animated:aar",
+      "androidx.vectordrawable:vectordrawable:aar",
       "androidx.versionedparcelable:versionedparcelable:aar",
       "androidx.viewpager:viewpager:aar",
+      "androidx.window:window-core-jvm",
+      "androidx.window:window:aar",
       "com.android.billingclient:billing:aar",
       "com.google.android.datatransport:transport-api:aar",
       "com.google.android.datatransport:transport-backend-cct:aar",
@@ -862,16 +1564,49 @@
       "com.google.firebase:firebase-encoders-proto"
     ],
     "https://repo.maven.apache.org/maven2/": [
+      "com.facebook.fbjni:fbjni:aar",
+      "com.facebook.fresco:drawee:aar",
+      "com.facebook.fresco:fbcore:aar",
+      "com.facebook.fresco:fresco:aar",
+      "com.facebook.fresco:imagepipeline-base:aar",
+      "com.facebook.fresco:imagepipeline-native:aar",
+      "com.facebook.fresco:imagepipeline-okhttp3:aar",
+      "com.facebook.fresco:imagepipeline:aar",
+      "com.facebook.fresco:memory-type-ashmem:aar",
+      "com.facebook.fresco:memory-type-java:aar",
+      "com.facebook.fresco:memory-type-native:aar",
+      "com.facebook.fresco:middleware:aar",
+      "com.facebook.fresco:nativeimagefilters:aar",
+      "com.facebook.fresco:nativeimagetranscoder:aar",
+      "com.facebook.fresco:soloader:aar",
+      "com.facebook.fresco:ui-common:aar",
+      "com.facebook.fresco:ui-core:aar",
+      "com.facebook.fresco:urimod:aar",
+      "com.facebook.fresco:vito-source:aar",
+      "com.facebook.infer.annotation:infer-annotation",
       "com.facebook.react:react-android",
       "com.facebook.react:react-android:aar:release",
+      "com.facebook.soloader:annotation",
+      "com.facebook.soloader:nativeloader",
+      "com.facebook.soloader:soloader:aar",
+      "com.facebook.yoga:proguard-annotations",
+      "com.google.code.findbugs:jsr305",
       "com.google.guava:listenablefuture",
+      "com.parse.bolts:bolts-tasks",
+      "com.squareup.okhttp3:okhttp",
+      "com.squareup.okhttp3:okhttp-urlconnection",
+      "com.squareup.okio:okio",
       "javax.inject:javax.inject",
+      "org.jetbrains.kotlin:kotlin-annotations-jvm",
       "org.jetbrains.kotlin:kotlin-stdlib",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk7",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
       "org.jetbrains.kotlinx:kotlinx-coroutines-android",
       "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm",
       "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm",
       "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm",
-      "org.jetbrains:annotations"
+      "org.jetbrains:annotations",
+      "org.jspecify:jspecify"
     ]
   },
   "services": {
@@ -889,6 +1624,7 @@
     "androidx.collection:collection",
     "androidx.sqlite:sqlite-framework:aar",
     "androidx.sqlite:sqlite:aar",
+    "androidx.window:window-core",
     "com.facebook.react:react-android",
     "org.jetbrains.kotlin:kotlin-stdlib-common",
     "org.jetbrains.kotlinx:kotlinx-coroutines-bom",
