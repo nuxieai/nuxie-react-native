@@ -6,7 +6,7 @@ import { palette } from './theme';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import type { NuxieConfiguration } from '@nuxie/react-native';
 
-export interface LabDefaults { iosKey?: string; androidKey?: string; customerId?: string; featureId?: string; event?: string; entityA?: string; entityB?: string; validateOnConnect?: boolean }
+export interface LabDefaults { iosKey?: string; androidKey?: string; customerId?: string; featureId?: string; event?: string; entityA?: string; entityB?: string; validateOnConnect?: boolean; v3ProbeUrl?: string }
 export function Lab({ host, defaults = {} }: { host: string; defaults?: LabDefaults }) {
   const styles = useStyles();
   const [configuration, setConfiguration] = useState<NuxieConfiguration | undefined>(() => defaults.iosKey && defaults.androidKey ? { apiKeys: { ios: defaults.iosKey, android: defaults.androidKey }, environment: 'development', logLevel: 'debug' } : undefined);

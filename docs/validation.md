@@ -2,8 +2,9 @@
 
 ## Bazel build migration
 
-The migration pins landed iOS `615a31bd03483e79a8590f8408b035659581f8f7`
-and Android `7ebe2d72570b169712fd913fd2c5b2de4bf2848d`. Local package scripts
+The build migration qualified landed iOS `615a31bd03483e79a8590f8408b035659581f8f7`
+and Android `7ebe2d72570b169712fd913fd2c5b2de4bf2848d`. These are its historical
+native v2 products; [native v3 consumers](native-v3.md) use the current pins. Local package scripts
 and Buildkite use the same Bazel JavaScript and native bridge frontends, with
 shared reusable caches and separate output bases for each checkout.
 

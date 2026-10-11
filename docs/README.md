@@ -7,3 +7,4 @@ Start with the [README](../README.md), then use:
 - [Architecture](architecture.md) for lifecycle, bridge and packaging decisions.
 - [Development](development.md) for source builds, packed consumers and examples.
 - [Validation](validation.md) for actual qualification evidence and remaining limits.
+- [Native v3 consumers](native-v3.md) for signed Journey admission through the development hosts.
