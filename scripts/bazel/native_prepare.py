@@ -5,8 +5,10 @@ import json
 import os
 import platform
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 
 
 def checkout(root, sdk, pin):
@@ -48,6 +50,44 @@ def supplied_artifacts(sdk, pin, configuration='Debug'):
     return manifest
 
 
+def publish_android_products(manifest, destination, root, revision):
+    from native_artifacts import inventory
+    destination = Path(destination).absolute()
+    if destination.is_symlink() or destination.resolve() == root or not destination.resolve().is_relative_to(root):
+        raise ValueError('Android package products must belong to this checkout')
+    _, source, files, links = inventory(manifest, 'android', revision)
+    if destination.resolve() == source:
+        return manifest
+    if source.is_relative_to(destination.resolve()) or destination.resolve().is_relative_to(source):
+        raise ValueError('Android package publication must not overlap its supplied producer')
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.maven-', dir=destination.parent) as temporary:
+        stage = Path(temporary) / 'products'
+        stage.mkdir()
+        for name in files:
+            target = stage / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source / name, target)
+            target.chmod(0o644)
+        for name, target in links.items():
+            link = stage / name
+            link.parent.mkdir(parents=True, exist_ok=True)
+            link.symlink_to(target)
+        shutil.copy2(manifest, stage / 'sdk-artifacts.json')
+        (stage / 'sdk-artifacts.json').chmod(0o644)
+        inventory(stage / 'sdk-artifacts.json', 'android', revision)
+        previous = Path(temporary) / 'previous'
+        if destination.exists():
+            os.replace(destination, previous)
+        try:
+            os.replace(stage, destination)
+        except BaseException:
+            if previous.exists():
+                os.replace(previous, destination)
+            raise
+    return destination / 'sdk-artifacts.json'
+
+
 def prepare(root, sdks, configuration='Debug', android_output=None):
     root = Path(root).resolve()
     pins = json.loads((root / 'NATIVE-PINS.json').read_text())
@@ -59,6 +99,8 @@ def prepare(root, sdks, configuration='Debug', android_output=None):
         for sdk in sdks:
             supplied = supplied_artifacts(sdk, pins[sdk], configuration)
             if supplied:
+                if sdk == 'android' and android_output is not None:
+                    supplied = publish_android_products(supplied, android_output, root, pins[sdk]['revision'])
                 products[sdk] = supplied
                 continue
             source, producer = checkout(root, sdk, pins[sdk])
