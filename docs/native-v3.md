@@ -85,6 +85,13 @@ xcrun simctl spawn "$DEVICE_UDID" log show --style json --info --debug \
   --predicate "processIdentifier == $APP_PID" > /absolute/scoped-native.log
 ```
 
+For a negative case, parse each log row's event timestamp and keep only rows
+after the identified customer's successful profile `responseCompletedAtNs`
+and through the completed observation response. This server timestamp records
+response body completion, separately from request `receivedAtNs`.
+Retain the original stream, exact launched PID, both time fences and filtered
+log hash with the actual built app/executable inventory.
+
 If the simulator does not retain Debug messages, start `log stream --level debug`
 for the owning app process before the case and retain its PID/time-bounded output.
 The identified-profile rejection can occur at a Debug log site; a missing category

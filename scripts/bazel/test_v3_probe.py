@@ -181,6 +181,7 @@ class ConsumerVerdictTests(unittest.TestCase):
                     def post(path, body):
                         return urlopen(Request(endpoint + path, json.dumps(body).encode(),
                                                headers={'Content-Type': 'application/json'}))
+                    before_profile_ns = time.time_ns()
                     with post('/profile', {'apiKey': config['apiKeys']['ios'],
                                            'distinct_id': config['customerId'], 'version': 1}) as response:
                         self.assertEqual(response.read(), profile)
@@ -193,9 +194,15 @@ class ConsumerVerdictTests(unittest.TestCase):
                         self.assertEqual(json.load(response)['processed'], 1)
                     with urlopen(endpoint + '/status') as response:
                         status = json.load(response)
+                    after_status_ns = time.time_ns()
                     self.assertEqual(status['identifiedProfileCount'], 1)
                     self.assertEqual(status['controlIndexes'], [0])
-                    retained = json.loads((evidence / 'server-ledger.json').read_text())['events'][0]
+                    delivery = json.loads((evidence / 'server-ledger.json').read_text())
+                    profile_response = next(row for row in delivery['requests'] if row['path'] == '/profile')
+                    self.assertLessEqual(before_profile_ns, profile_response['receivedAtNs'])
+                    self.assertLessEqual(profile_response['receivedAtNs'], profile_response['responseCompletedAtNs'])
+                    self.assertLessEqual(profile_response['responseCompletedAtNs'], after_status_ns)
+                    retained = delivery['events'][0]
                     self.assertEqual(retained['idempotency_key'], WIRE_ORACLE['idempotency_key'])
                     self.assertNotIn('distinctId', retained)
                 finally:
