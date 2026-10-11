@@ -67,6 +67,15 @@ class ConsumerVerdictTests(unittest.TestCase):
         self.assertEqual(result['nativeControlEvents'], 45)
         self.assertFalse(result['screenOrFormEditingQualified'])
 
+    def test_json_number_semantics_accept_integral_floating_representations(self):
+        value = ledger(True)
+        for event in value['events'][:45]:
+            event['properties']['probeIndex'] = float(event['properties']['probeIndex'])
+        value['events'][45]['properties']['probeNumber'] = 42.0
+        value['events'][-1]['properties']['outputs']['event']['probeNumber'] = 42.0
+        result = PROBE.verify(value, '', MANIFEST)
+        self.assertEqual(result['nativeControlEvents'], 45)
+
     def test_rejection_requires_authentication_failure_after_successful_transport(self):
         value = ledger(False)
         with self.assertRaisesRegex(ValueError, 'Missing actual native'):
@@ -85,7 +94,9 @@ class ConsumerVerdictTests(unittest.TestCase):
             lambda value: value['requests'][0].update(responseSha256='wrong-product'),
             lambda value: value['events'].pop(0),
             lambda value: value['events'][0]['properties'].update(probeIndex=True),
+            lambda value: value['events'][0]['properties'].update(probeIndex=.25),
             lambda value: value['events'][45]['properties'].update(probeNumber=43),
+            lambda value: value['events'][45]['properties'].update(probeNumber=True),
             lambda value: value['observations'][0].update(finalFeatureState='unknown'),
             lambda value: value['observations'][0]['activities'].reverse(),
             lambda value: value['observations'][0]['activities'][0]['properties'].update(leg_id='wrong-leg'),
