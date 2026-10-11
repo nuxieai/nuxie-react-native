@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import math
 from pathlib import Path
+import re
 import threading
 import time
 from urllib.parse import urlsplit
@@ -54,6 +55,29 @@ def is_json_number(value):
     return type(value) is int or (type(value) is float and math.isfinite(value))
 
 
+def terminal_authentication_failure(native_log, platform):
+    """Match actual native terminal log sites without exposing their redacted error descriptions."""
+    if platform == 'ios':
+        # NuxieSDK/UserTransitionCoordinator interpolate Error; NuxieLogger retains only its concrete category.
+        pattern = (r'\[Nuxie\] \[(?:WARNING|DEBUG)\] '
+                   r'\[(?:NuxieSDK|UserTransitionCoordinator)\.swift:\d+\] '
+                   r'(?:Profile fetch failed|Identity profile refresh failed): '
+                   r'<redacted:error=JourneyReleaseAuthenticationError hmac-sha256:[0-9a-f]{16}>')
+        category = 'JourneyReleaseAuthenticationError'
+    elif platform == 'android':
+        # ProfileService rejection + concrete authenticated-release exception survives default stack redaction.
+        pattern = (r'Journey plane profile rejected '
+                   r'error=ai\.nuxie\.sdk\.experiences\.JourneyReleaseAuthenticationException '
+                   r'<redacted hmac-sha256:[0-9a-f]{16}>')
+        category = 'ai.nuxie.sdk.experiences.JourneyReleaseAuthenticationException'
+    else:
+        raise ValueError('Unsupported native log platform')
+    match = re.search(pattern, native_log)
+    require(match is not None, 'Missing actual terminal native authentication failure category')
+    return {'category': category, 'scope': 'terminal-authentication-error-category-only',
+            'matchedLogSha256': digest(match.group(0).encode())}
+
+
 def verify(ledger, native_log, manifest):
     """A native error is mandatory for rejection; successful HTTP delivery alone is insufficient."""
     case = next(row for row in manifest['cases'] if row['name'] == ledger['caseName'])
@@ -86,6 +110,7 @@ def verify(ledger, native_log, manifest):
             'Actual native ingest did not receive exact typed trigger properties')
     journeys = [row for row in observed['activities'] if row['name'] in manifest['expectedActivities']]
     native_journeys = [row for row in events if row.get('event', '').startswith('$journey_leg_')]
+    rejection = None
     if case['verdict'] == 'accepted':
         require(observed['finalFeatureState'] == 'ready', 'Accepted profile did not publish native ready state')
         require([row['name'] for row in journeys] == manifest['expectedActivities'],
@@ -117,14 +142,15 @@ def verify(ledger, native_log, manifest):
         require(completed[0]['properties'].get('journey_id') == journey_id, 'Ingest/curated Journey identity differs')
         require(completed[0]['properties'].get('outcome') == expected['outcome'], 'Wrong native completion outcome')
     else:
-        require(case['reason'] in native_log, 'Missing actual native authentication/schema failure reason')
+        rejection = terminal_authentication_failure(native_log, ledger['platform'])
         require(observed['finalFeatureState'] == 'unknown', 'Rejected profile incorrectly published ready state')
         require(not journeys and not native_journeys, 'Rejected profile admitted a Journey')
     return {'caseName': ledger['caseName'], 'consumer': ledger['consumer'], 'platform': ledger['platform'],
             'customerId': ledger['customerId'], 'status': 'PASS', 'profileSha256': case['sha256'],
             'nativeVersion': observed['nativeVersion'], 'nativeControlEvents': len(controls),
             'actualWrapperJourneyActivities': len(journeys), 'actualNativeJourneyEvents': len(native_journeys),
-            'nativeFailureReason': case['reason'], 'screenOrFormEditingQualified': False}
+            'expectedFixtureContractCode': case['reason'], 'observedNativeRejection': rejection,
+            'screenOrFormEditingQualified': False}
 
 
 def serve(args):
