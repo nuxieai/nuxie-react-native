@@ -12,7 +12,7 @@ native_codegen(
 
 kt_android_library(
     name = "bridge",
-    srcs = glob(["src/main/**/*.kt", "src/main/**/*.java"]) + [":codegen"],
+    srcs = glob(["src/main/**/*.kt"]) + glob(["src/main/**/*.java"], allow_empty = True) + [":codegen"],
     manifest = "src/main/AndroidManifest.xml",
     custom_package = "ai.nuxie.reactnative",
     deps = [
