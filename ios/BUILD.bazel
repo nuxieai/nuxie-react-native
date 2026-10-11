@@ -13,6 +13,7 @@ swift_library(
     copts = ["-swift-version", "5"],
     generates_header = True,
     deps = ["@nuxie_native_ios//:sdk"],
+    data = ["@nuxie_native_ios//:resources"],
     target_compatible_with = ["@platforms//os:ios"],
 )
 
