@@ -231,6 +231,7 @@ def serve(args):
                 else:
                     self.json_answer(401, {'error': 'unknown route or probe API key'})
                     row.update(status=401)
+                row['responseCompletedAtNs'] = time.time_ns()
                 ledger['requests'].append(row)
                 save()
 
