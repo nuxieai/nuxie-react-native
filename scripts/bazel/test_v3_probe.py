@@ -28,6 +28,11 @@ MANIFEST = {'cases': [
     'trigger': 'wrapper_v3_probe', 'triggerProperties': VALUES,
     'expectedActivities': ['journey_started', 'journey_completed'],
     'expectedProperties': EXPECTED, 'expectedOutputs': OUTPUTS}
+IOS_REJECTION = ('[Nuxie] [DEBUG] [UserTransitionCoordinator.swift:127] Identity profile refresh failed: '
+                 '<redacted:error=JourneyReleaseAuthenticationError hmac-sha256:0123456789abcdef>')
+ANDROID_REJECTION = ('Journey plane profile rejected '
+                     'error=ai.nuxie.sdk.experiences.JourneyReleaseAuthenticationException '
+                     '<redacted hmac-sha256:0123456789abcdef>')
 
 
 def ledger(accepted):
@@ -78,10 +83,27 @@ class ConsumerVerdictTests(unittest.TestCase):
 
     def test_rejection_requires_authentication_failure_after_successful_transport(self):
         value = ledger(False)
-        with self.assertRaisesRegex(ValueError, 'Missing actual native'):
+        with self.assertRaisesRegex(ValueError, 'Missing actual terminal native'):
             PROBE.verify(value, 'Profile HTTP 200; no events', MANIFEST)
-        result = PROBE.verify(value, 'journey_release.signature.bad_signature', MANIFEST)
+        result = PROBE.verify(value, IOS_REJECTION, MANIFEST)
         self.assertEqual(result['actualWrapperJourneyActivities'], 0)
+        self.assertEqual(result['expectedFixtureContractCode'], 'journey_release.signature.bad_signature')
+        self.assertEqual(result['observedNativeRejection']['category'], 'JourneyReleaseAuthenticationError')
+
+    def test_rejection_requires_platform_terminal_site_and_exact_authentication_category(self):
+        value = ledger(False)
+        for log in ['journey_release.signature.bad_signature', 'JourneyReleaseAuthenticationError',
+                    IOS_REJECTION.replace('JourneyReleaseAuthenticationError', 'NuxieNetworkError'),
+                    IOS_REJECTION.replace('Identity profile refresh failed', 'Unrelated cache cleanup failed'),
+                    ANDROID_REJECTION]:
+            with self.subTest(log=log), self.assertRaises(ValueError):
+                PROBE.verify(value, log, MANIFEST)
+        value['platform'] = value['observations'][0]['platform'] = 'android'
+        result = PROBE.verify(value, ANDROID_REJECTION, MANIFEST)
+        self.assertEqual(result['observedNativeRejection']['category'],
+                         'ai.nuxie.sdk.experiences.JourneyReleaseAuthenticationException')
+        with self.assertRaises(ValueError):
+            PROBE.verify(value, ANDROID_REJECTION.replace('JourneyReleaseAuthenticationException', 'IOException'), MANIFEST)
 
     def test_independent_negative_controls_cannot_be_reported_as_pass(self):
         mutations = [
@@ -188,7 +210,7 @@ class ConsumerVerdictTests(unittest.TestCase):
             value = ledger(False)
             mutate(value)
             with self.assertRaises(ValueError):
-                PROBE.verify(value, 'journey_release.signature.bad_signature', MANIFEST)
+                PROBE.verify(value, IOS_REJECTION, MANIFEST)
 
 
 if __name__ == '__main__':

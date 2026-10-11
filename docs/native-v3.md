@@ -77,10 +77,15 @@ On iOS, capture the case's start/end times and the returned process ID, then
 retain only that process's unified log in that time interval:
 
 ```sh
-xcrun simctl spawn "$DEVICE_UDID" log show --style json \
+xcrun simctl spawn "$DEVICE_UDID" log show --style json --info --debug \
   --start "$CASE_STARTED_AT" --end "$CASE_ENDED_AT" \
   --predicate "processIdentifier == $APP_PID" > /absolute/scoped-native.log
 ```
+
+If the simulator does not retain Debug messages, start `log stream --level debug`
+for the owning app process before the case and retain its PID/time-bounded output.
+The identified-profile rejection can occur at a Debug log site; a missing category
+is a failed evidence run, not permission to infer rejection from a timeout.
 
 On Android, retain `adb logcat --pid="$APP_PID"` from the freshly launched app
 through the observation barrier. Record the emulator/device identity separately.
@@ -94,8 +99,15 @@ python3 scripts/v3-probe.py verify --fixtures /absolute/signed-fixture \
 ```
 
 Repeat in fresh native sessions for `retired-v1`, `retired-v2` and
-`wrong-domain`. A negative verdict requires the real native authentication
-failure reason as well as completed profile/event transport and no admitted
-Journey. The positive verdict checks ordered Journey identity/outcome and exact
+`wrong-domain`. A negative verdict requires a scoped terminal native profile
+rejection with the concrete authentication error category, completed
+profile/event transport and no admitted Journey. Default native privacy redacts
+error descriptions: iOS retains `JourneyReleaseAuthenticationError` at its
+profile-failure log sites; Android retains
+`ai.nuxie.sdk.experiences.JourneyReleaseAuthenticationException` at the
+`Journey plane profile rejected` site. The receipt separates this observed
+category-only proof from the independently signed fixture's expected contract
+code. It never accepts a generic network failure or a bare expected-code string.
+The positive verdict checks ordered Journey identity/outcome and exact
 typed native completion outputs. A screenless fixture establishes neither
 rendered screens nor form editing, purchases or physical-device behavior.
