@@ -95,6 +95,79 @@ out.mkdir(parents=True, exist_ok=True)
             with self.assertRaisesRegex(ValueError, 'absolute'):
                 prepare(self.root, ['android'])
 
+    def test_supplied_android_products_publish_into_each_private_package(self):
+        product = Path(self.temporary.name) / 'prepared'
+        product.mkdir()
+        artifact = product / 'sdk.aar'
+        content = b'prepared SDK for npm consumers'
+        artifact.write_bytes(content)
+        manifest = product / 'sdk-artifacts.json'
+        original = json.dumps({'schemaVersion': 1, 'sdk': 'android',
+            'sourceRevision': self.revision, 'sourceDirty': False,
+            'artifacts': [{'path': 'sdk.aar', 'size': len(content),
+                           'sha256': hashlib.sha256(content).hexdigest()}]}).encode()
+        manifest.write_bytes(original)
+        artifact.chmod(0o444)
+        for name in ('first', 'second', 'first'):
+            output = self.root / name / 'android/maven'
+            with patch.dict(os.environ, {'NUXIE_ANDROID_ARTIFACTS': str(product)}):
+                result = prepare(self.root, ['android'], android_output=output)
+            self.assertEqual(result['android'], output / 'sdk-artifacts.json')
+            self.assertEqual((output / 'sdk.aar').read_bytes(), content)
+            self.assertEqual((output / 'sdk-artifacts.json').read_bytes(), original)
+            self.assertEqual((output / 'sdk.aar').stat().st_mode & 0o777, 0o644)
+        (self.root / 'second/android/maven/sdk.aar').write_bytes(b'private second output')
+        self.assertEqual((self.root / 'first/android/maven/sdk.aar').read_bytes(), content)
+        self.assertEqual(artifact.read_bytes(), content)
+        self.assertEqual(artifact.stat().st_mode & 0o777, 0o444)
+        self.assertFalse((self.root / '.native/android').exists())
+
+        other = Path(self.temporary.name) / 'other-worktree'
+        other.mkdir()
+        (other / 'sdk.aar').write_bytes(b'other worktree output')
+        link = self.root / 'linked-products'
+        link.symlink_to(other, target_is_directory=True)
+        for output in (other, link, self.root):
+            with self.subTest(output=output):
+                with patch.dict(os.environ, {'NUXIE_ANDROID_ARTIFACTS': str(product)}):
+                    with self.assertRaisesRegex(ValueError, 'belong to this checkout'):
+                        prepare(self.root, ['android'], android_output=output)
+        self.assertEqual((other / 'sdk.aar').read_bytes(), b'other worktree output')
+        self.assertTrue(link.is_symlink())
+
+        retained = self.root / 'android/maven/retained-producer'
+        retained.mkdir(parents=True)
+        (retained / 'sdk.aar').write_bytes(content)
+        (retained / 'sdk-artifacts.json').write_bytes(original)
+        for output in (retained.parent, retained / 'nested-publication'):
+            with self.subTest(overlapping=output):
+                with patch.dict(os.environ, {'NUXIE_ANDROID_ARTIFACTS': str(retained)}):
+                    with self.assertRaisesRegex(ValueError, 'overlap its supplied producer'):
+                        prepare(self.root, ['android'], android_output=output)
+                self.assertEqual((retained / 'sdk.aar').read_bytes(), content)
+                self.assertEqual((retained / 'sdk-artifacts.json').read_bytes(), original)
+        with patch.dict(os.environ, {'NUXIE_ANDROID_ARTIFACTS': str(retained)}):
+            self.assertEqual(prepare(self.root, ['android'], android_output=retained),
+                             {'android': retained / 'sdk-artifacts.json'})
+
+    def test_supplied_android_publication_preserves_previous_product_on_copy_failure(self):
+        product = Path(self.temporary.name) / 'prepared'
+        product.mkdir()
+        (product / 'sdk.aar').write_bytes(b'new SDK')
+        manifest = product / 'sdk-artifacts.json'
+        manifest.write_text(json.dumps({'schemaVersion': 1, 'sdk': 'android',
+            'sourceRevision': self.revision, 'sourceDirty': False,
+            'artifacts': [{'path': 'sdk.aar', 'size': 7,
+                           'sha256': hashlib.sha256(b'new SDK').hexdigest()}]}))
+        output = self.root / 'android/maven'
+        output.mkdir(parents=True)
+        (output / 'sdk.aar').write_bytes(b'previous SDK')
+        with patch.dict(os.environ, {'NUXIE_ANDROID_ARTIFACTS': str(product)}):
+            with patch('native_prepare.shutil.copy2', side_effect=OSError('copy failed')):
+                with self.assertRaisesRegex(OSError, 'copy failed'):
+                    prepare(self.root, ['android'], android_output=output)
+        self.assertEqual((output / 'sdk.aar').read_bytes(), b'previous SDK')
+
     def ios_fixture(self, name, configuration, revision=None):
         products = self.root / name
         products.mkdir()

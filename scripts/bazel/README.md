@@ -18,6 +18,11 @@ uses the owning pinned React Native package. CocoaPods/React C++ integration,
 bare and Expo app builds remain independent consumer compatibility checks in
 `node scripts/check.mjs`.
 
+An explicit `NUXIE_ANDROID_ARTIFACTS` receipt is verified and copied into this
+checkout's `android/maven` package directory. Its original receipt and artifact
+bytes are retained, and the producer's cached files stay unchanged. Reinstall
+the examples' file dependencies after native preparation to include that product.
+
 Bazel9.3.0 is selected by `.bazelversion`. The launcher uses an installed
 Bazelisk, or installs the checksummed standalone fallback. Buildkite sources
 `ci-cache.sh` and invokes the same package and bridge commands as local builds.
