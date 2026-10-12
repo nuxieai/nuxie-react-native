@@ -27,17 +27,35 @@ def non_android_environment():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=['build', 'test', 'typecheck', 'build-native'])
+    parser.add_argument('--platform', choices=['portable', 'android', 'ios', 'all'], default='all')
     args = parser.parse_args()
+    if args.command != 'build-native' and args.platform != 'all':
+        parser.error('--platform selects build-native only')
     if args.command == 'build-native':
-        products = prepare(ROOT, ['ios', 'android'], android_output=ROOT / 'android/maven')
-        environment = dict(non_android_environment(), NUXIE_IOS_ARTIFACTS=str(products['ios']),
-                           NUXIE_ANDROID_ARTIFACTS=str(products['android']))
-        architecture = platform.machine()
-        subprocess.run([str(LAUNCHER), 'build', '//ios:swift_bridge',
-                        '--platforms=//:ios_simulator_' + architecture, '--ios_minimum_os=15.1'], cwd=ROOT, env=environment, check=True)
-        view = sdk_view(ROOT)
-        environment.update(ANDROID_HOME=str(view), ANDROID_SDK_ROOT=str(view))
-        subprocess.run([str(LAUNCHER), 'build', '//android:bridge', '--platforms=//:android_arm64', '--extra_toolchains=@androidsdk//:sdk-toolchain'], cwd=ROOT, env=environment, check=True)
+        selected = ['ios', 'android'] if args.platform == 'all' else [] if args.platform == 'portable' else [args.platform]
+        if not selected:
+            return
+        if 'ios' in selected and (sys.platform != 'darwin' or platform.machine() not in ('arm64', 'x86_64')):
+            raise ValueError('iOS native bridge requires macOS arm64 or x86_64')
+        products = prepare(ROOT, selected, android_output=ROOT / 'android/maven')
+        environment = non_android_environment()
+        for key in tuple(environment):
+            if (key.startswith('NUXIE_IOS_') and 'ios' not in selected) or (key.startswith('NUXIE_ANDROID_') and 'android' not in selected):
+                environment.pop(key)
+        for sdk, manifest in products.items():
+            environment['NUXIE_' + sdk.upper() + '_ARTIFACTS'] = str(manifest)
+        if 'ios' in selected:
+            architecture = platform.machine()
+            if sys.platform != 'darwin' or architecture not in ('arm64', 'x86_64'):
+                raise ValueError('iOS native bridge requires macOS arm64 or x86_64')
+            subprocess.run([str(LAUNCHER), 'build', '//ios:swift_bridge',
+                            '--platforms=//:ios_simulator_' + architecture, '--ios_minimum_os=15.1'],
+                           cwd=ROOT, env=environment, check=True)
+        if 'android' in selected:
+            view = sdk_view(ROOT)
+            environment.update(ANDROID_HOME=str(view), ANDROID_SDK_ROOT=str(view))
+            subprocess.run([str(LAUNCHER), 'build', '//android:bridge', '--platforms=//:android_arm64',
+                            '--extra_toolchains=@androidsdk//:sdk-toolchain'], cwd=ROOT, env=environment, check=True)
         return
     if args.command == 'test':
         subprocess.run([str(LAUNCHER), 'test', '//:unit_tests'], cwd=ROOT, env=non_android_environment(), check=True)

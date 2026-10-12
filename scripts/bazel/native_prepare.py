@@ -14,6 +14,8 @@ import tempfile
 def checkout(root, sdk, pin):
     source = root / '.native' / sdk
     source.parent.mkdir(exist_ok=True)
+    if source.parent.is_symlink() or source.is_symlink():
+        raise ValueError('Preserving symlinked native checkout: ' + str(source))
     existed = source.exists()
     if not existed:
         subprocess.run(['git', 'clone', '--no-checkout', pin['repository'], str(source)], check=True)
@@ -30,12 +32,12 @@ def checkout(root, sdk, pin):
     return source, producer
 
 
-def supplied_artifacts(sdk, pin, configuration='Debug'):
-    value = None
+def supplied_artifacts(sdk, pin, configuration='Debug', selected=None):
+    value = selected
     if sdk == 'ios':
         if configuration not in ('Debug', 'Release'):
             raise ValueError('Select the Debug or Release iOS configuration')
-        value = os.environ.get('NUXIE_IOS_' + configuration.upper() + '_ARTIFACTS')
+        value = value or os.environ.get('NUXIE_IOS_' + configuration.upper() + '_ARTIFACTS')
     value = value or os.environ.get('NUXIE_' + sdk.upper() + '_ARTIFACTS')
     if not value:
         return None
@@ -45,8 +47,10 @@ def supplied_artifacts(sdk, pin, configuration='Debug'):
     manifest = selected / 'sdk-artifacts.json' if selected.is_dir() else selected
     from native_artifacts import inventory
     receipt, _, _, _ = inventory(manifest, sdk, pin['revision'])
-    if sdk == 'ios' and not any(product.get('configuration') == configuration for product in receipt.get('products', [])):
-        raise ValueError('Prepared iOS artifacts do not contain the requested ' + configuration + ' configuration')
+    if sdk == 'ios' and not any(product.get('configuration') == configuration
+            and product.get('platform') == 'ios-simulator' and platform.machine() in product.get('architectures', [])
+            for product in receipt.get('products', [])):
+        raise ValueError('Prepared iOS artifacts do not contain the requested ' + configuration + ' configuration, simulator platform and host architecture')
     return manifest
 
 
@@ -89,20 +93,37 @@ def publish_android_products(manifest, destination, root, revision):
 
 
 def prepare(root, sdks, configuration='Debug', android_output=None):
+    mode = os.environ.get('NUXIE_NATIVE_PREPARED_ONLY', '0')
+    if mode not in ('0', '1'):
+        raise ValueError('NUXIE_NATIVE_PREPARED_ONLY must be 0 or 1')
     root = Path(root).resolve()
     pins = json.loads((root / 'NATIVE-PINS.json').read_text())
     native = root / '.native'
+    if native.is_symlink() or (native / '.prepare.lock').is_symlink():
+        raise ValueError('Preserving symlinked native checkout or preparation lock')
     native.mkdir(exist_ok=True)
     products = {}
     with (native / '.prepare.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         for sdk in sdks:
-            supplied = supplied_artifacts(sdk, pins[sdk], configuration)
+            selected = None
+            if mode == '1':
+                # Only this job's exact earlier preparation, never a fresh clone
+                # or a silently substituted producer during consumer checking.
+                output = android_output if sdk == 'android' and android_output is not None else native / 'artifacts' / sdk
+                selected = str(Path(output) / 'sdk-artifacts.json')
+            supplied = supplied_artifacts(sdk, pins[sdk], configuration, selected)
+            if mode == '1' and not supplied:
+                raise ValueError('Missing selected native producer receipt')
             if supplied:
                 if sdk == 'android' and android_output is not None:
                     supplied = publish_android_products(supplied, android_output, root, pins[sdk]['revision'])
                 products[sdk] = supplied
                 continue
+            approval = None
+            if os.environ.get('NUXIE_CI_RUNNER_POLICY_VERSION') == '2':
+                from native_producer_policy import qualification
+                approval = qualification(sdk, pins[sdk])
             source, producer = checkout(root, sdk, pins[sdk])
             if sdk == 'ios':
                 if sys.platform != 'darwin':
@@ -116,6 +137,14 @@ def prepare(root, sdks, configuration='Debug', android_output=None):
                 output = android_output or native / 'artifacts/android'
                 command = [sys.executable, str(producer), 'prepare', '--output', str(output),
                            '--maven-version', '0.2.0-' + pins[sdk]['revision']]
-            subprocess.run(command, cwd=source, check=True)
-            products[sdk] = Path(command[command.index('--output') + 1]) / 'sdk-artifacts.json'
+            if approval is not None:
+                from native_producer_policy import verify
+                verify(source, sdk, pins[sdk], approval)
+                command[1:1] = ['-I', '-B']
+            environment = dict(os.environ)
+            if approval is not None:
+                environment['PYTHONDONTWRITEBYTECODE'] = '1'
+            subprocess.run(command, cwd=source, env=environment, check=True)
+            manifest = Path(command[command.index('--output') + 1]) / 'sdk-artifacts.json'
+            products[sdk] = supplied_artifacts(sdk, pins[sdk], configuration, str(manifest))
     return products
