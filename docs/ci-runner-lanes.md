@@ -28,7 +28,7 @@ requests resources without authorizing them. There is no nested whole-job
 
 The final 14 GiB Linux profile supplies Bazel jobs 2, CPU 4, memory 7168 MiB,
 one local test and bootstrap jobs 2. CI setup applies the installed Node heap
-budget through `NODE_OPTIONS` (3072 MiB Linux, 8192 MiB Mac). Its installed
+budget through `NODE_OPTIONS` (4096 MiB Linux, 8192 MiB Mac). Its installed
 Gradle budget is one worker.
 V2 jobs disable Gradle daemons and project parallelism, set the daemon heap to
 2048 MiB and metaspace to 512 MiB, and run Kotlin compilation in process.
