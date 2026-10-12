@@ -57,3 +57,11 @@ configuration and falls back to `NUXIE_IOS_ARTIFACTS` when its specific override
 is unset. Each selected receipt must match the native pin, configuration and
 verified artifact inventory. An invalid explicit override fails without
 falling back to a different preparation.
+
+Readiness defaults to both native platforms. Select `--platform portable`,
+`--platform android` or `--platform ios` with the owning check command or
+`scripts/bazel/sdk.py build-native` to run an explicit seam. Apple selection
+requires macOS and a Debug simulator receipt for the host architecture; Android
+and portable selections never prepare Apple products. The CI graph, admitted
+resource boundary, exact receipts and separate cache-read activation gates are
+documented in [SDK confidence lanes](../../docs/ci-runner-lanes.md).

@@ -1,0 +1,26 @@
+{
+  "env": {
+    "CI": "1",
+    "LANG": "en_US.UTF-8",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "steps": [
+    {
+      "label": ":react: React Native SDK, bare and Expo hosts",
+      "command": "set -euo pipefail\nsource scripts/bazel/ci-cache.sh\nexport DEVELOPER_DIR=\"$HOME/Applications/Xcode-26.6.app/Contents/Developer\"\nxcodebuild -version\nexport JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home\nexport ANDROID_HOME=\"${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetools}\"\nexport ANDROID_SDK_ROOT=\"$ANDROID_HOME\"\nif [[ ! -x /opt/homebrew/opt/ruby/bin/ruby ]]; then\n  HOMEBREW_NO_AUTO_UPDATE=1 brew install ruby\nfi\nexport PATH=\"/opt/homebrew/opt/ruby/bin:$JAVA_HOME/bin:$PATH\"\n\"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager\" \\\n  \"platforms;android-36\" \"build-tools;36.0.0\" \"ndk;29.0.14206865\" \\\n  \"platforms;android-37.0\" \"build-tools;37.0.0\" \"ndk;27.1.12297006\" \\\n  \"cmake;3.22.1\"\ncorepack pnpm --ignore-workspace install --frozen-lockfile\ncorepack pnpm --ignore-workspace run prepare:native\ncorepack pnpm --ignore-workspace run build\n(cd examples/bare && corepack pnpm --ignore-workspace install --frozen-lockfile)\n(cd examples/expo && corepack pnpm --ignore-workspace install --frozen-lockfile)\nnode scripts/check.mjs\n",
+      "agents": {
+        "queue": "nuxie-pr",
+        "nuxie-platform": "macos"
+      },
+      "timeout_in_minutes": 60,
+      "retry": {
+        "automatic": [
+          {
+            "exit_status": -1,
+            "limit": 1
+          }
+        ]
+      }
+    }
+  ]
+}
