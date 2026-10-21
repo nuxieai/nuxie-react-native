@@ -4,8 +4,6 @@
 
 Add Nuxie to your app, trigger the moments you author in the dashboard, and let the native iOS and Android SDKs handle presentation, purchases, and reconciliation. React gets a small typed client and hooks that stay in sync with the current customer.
 
-This branch contains the breaking **0.2** SDK. It replaces the previous API completely. The package has not been published to npm yet; use the [source and packed-package instructions](docs/development.md) to try this checkout. The installation commands below target the 0.2 release.
-
 ```tsx
 const { access, state } = useFeature('premium_library');
 
@@ -38,7 +36,7 @@ The initial host matrix is **React Native 0.87.1** and **Expo 57 / React Native 
 ### Expo
 
 ```sh
-npx expo install @nuxie/react-native@^0.2.0 expo-dev-client
+npx expo install @nuxie/react-native@^1.0.0 expo-dev-client
 npx expo run:ios
 npx expo run:android
 ```
@@ -48,7 +46,7 @@ Use a development build instead of Expo Go. Nuxie autolinks during prebuild. It 
 ### Bare React Native
 
 ```sh
-npm install @nuxie/react-native@^0.2.0
+npm install @nuxie/react-native@^1.0.0
 cd ios
 bundle exec pod install
 ```

@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.license = 'MIT'
   s.author = 'Nuxie'
   s.platforms = { :ios => min_ios_version_supported }
-  s.source = { :git => 'https://github.com/nuxieai/nuxie-react-native.git', :tag => s.version.to_s }
+  s.source = { :git => 'https://github.com/nuxieai/nuxie-react-native.git', :tag => "v#{s.version}" }
   s.source_files = 'ios/**/*.{h,m,mm,swift}'
   s.swift_version = '5.9'
   install_modules_dependencies(s)

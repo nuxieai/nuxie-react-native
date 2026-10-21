@@ -116,7 +116,7 @@ export function createClient(load: () => Promise<NativeBinding>): NuxieClient {
             if (current !== epoch) throw new NuxieError('staleOperation', 'Configuration session was replaced');
             if (response.contract !== 1 || response.session !== session) throw new NuxieError('incompatibleBridge', 'Nuxie JavaScript and native module differ. Rebuild the native app.');
             publish(wire.snapshot(response.snapshot));
-            setStatus({ state: 'configured', versions: Object.freeze({ wrapper: '0.2.1', native: wire.string(response.nativeVersion), contract: 1 }) });
+            setStatus({ state: 'configured', versions: Object.freeze({ wrapper: '1.0.0', native: wire.string(response.nativeVersion), contract: 1 }) });
           } catch (error) {
             detach?.(); detach = undefined;
             session = undefined; configurationKey = undefined; controller = undefined;
