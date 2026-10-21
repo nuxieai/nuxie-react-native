@@ -1,0 +1,39 @@
+--- a/rules/android_sdk_repository/rule.bzl
++++ b/rules/android_sdk_repository/rule.bzl
+@@ -140,7 +140,11 @@
+         level.minor,
+         level.micro,
+     )).version
+-    if repo_ctx.attr.api_level:
++    if repo_ctx.attr.api_level_name:
++        if repo_ctx.attr.api_level:
++            fail("Specify api_level or api_level_name, not both")
++        default_api_level = repo_ctx.attr.api_level_name
++    elif repo_ctx.attr.api_level:
+         default_api_level = str(repo_ctx.attr.api_level)
+     if default_api_level not in api_levels:
+         fail("Android SDK api level %s was requested but it is not installed in the Android SDK at %s. The api levels found were %s. Please choose an available api level or install api level %s from the Android SDK Manager." % (
+@@ -193,6 +197,7 @@
+     implementation = _android_sdk_repository_impl,
+     attrs = {
+         "api_level": attr.int(default = 0),
++        "api_level_name": attr.string(),
+         "build_tools_version": attr.string(),
+         "path": attr.string(),
+     },
+@@ -240,6 +245,7 @@
+     kwargs = {}
+     if module.tags.configure:
+         kwargs["api_level"] = module.tags.configure[0].api_level
++        kwargs["api_level_name"] = module.tags.configure[0].api_level_name
+         kwargs["build_tools_version"] = module.tags.configure[0].build_tools_version
+         kwargs["path"] = module.tags.configure[0].path
+ 
+@@ -260,6 +266,7 @@
+         "configure": tag_class(attrs = {
+             "path": attr.string(),
+             "api_level": attr.int(),
++            "api_level_name": attr.string(),
+             "build_tools_version": attr.string(),
+         }),
+     },

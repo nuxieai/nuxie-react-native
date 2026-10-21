@@ -11,6 +11,12 @@ bazel_dep(name = "rules_apple", version = "4.5.0")
 bazel_dep(name = "rules_swift", version = "4.1.0")
 bazel_dep(name = "rules_cc", version = "0.2.20")
 bazel_dep(name = "rules_android", version = "0.8.0")
+single_version_override(
+    module_name = "rules_android",
+    version = "0.8.0",
+    patches = ["//scripts/bazel:rules-android-decimal-api.patch"],
+    patch_strip = 1,
+)
 bazel_dep(name = "rules_java", version = "9.3.0")
 bazel_dep(name = "rules_kotlin", version = "2.2.2")
 bazel_dep(name = "rules_jvm_external", version = "7.1")
@@ -26,7 +32,8 @@ kotlin.kotlinc_version(version = "2.2.0", sha256 = "1adb6f1a5845ba0aa5a59e412e44
 use_repo(kotlin, "com_github_jetbrains_kotlin")
 register_toolchains("//scripts/bazel:kotlin_toolchain")
 sdk = use_extension("@rules_android//rules/android_sdk_repository:rule.bzl", "android_sdk_repository_extension")
-sdk.configure(api_level = 37, build_tools_version = "37.0.0")
+# Android 17 uses the decimal platform identifier 37.0.
+sdk.configure(api_level_name = "37.0", build_tools_version = "37.0.0")
 use_repo(sdk, "androidsdk")
 
 native_dependencies = use_repo_rule("//scripts/bazel:native-dependencies.bzl", "native_dependencies")
@@ -44,6 +51,7 @@ maven.install(
         "androidx.sqlite:sqlite-framework:2.6.2",
         "androidx.browser:browser:1.8.0",
         "com.android.billingclient:billing:9.1.0",
+        "com.google.android.material:material:1.12.0",
         "org.jetbrains.kotlin:kotlin-stdlib:2.2.10",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0",
@@ -62,6 +70,7 @@ native.artifacts(
         "@rn_maven//:androidx_browser_browser": "androidx.browser:browser:1.8.0",
         "@rn_maven//:androidx_sqlite_sqlite_framework": "androidx.sqlite:sqlite-framework:2.6.2",
         "@rn_maven//:com_android_billingclient_billing": "com.android.billingclient:billing:9.1.0",
+        "@rn_maven//:com_google_android_material_material": "com.google.android.material:material:1.12.0",
         # React's published dependency mediates the native POM request to 2.2.10.
         "@rn_maven//:org_jetbrains_kotlin_kotlin_stdlib": "org.jetbrains.kotlin:kotlin-stdlib:2.0.21",
         "@rn_maven//:org_jetbrains_kotlinx_kotlinx_coroutines_android": "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0",
