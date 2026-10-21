@@ -8,3 +8,5 @@ exports_files(["native.bzl", "codegen.mjs", "native-dependencies.bzl", "native-d
 native_kotlin_toolchain(name = "kotlin_toolchain")
 
 exports_files(["rules-jvm-external-classified-transitives.patch"])
+
+exports_files(["rules-android-decimal-api.patch"])
