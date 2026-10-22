@@ -90,6 +90,17 @@ class ConsumerVerdictTests(unittest.TestCase):
         self.assertEqual(result['expectedFixtureContractCode'], 'journey_release.signature.bad_signature')
         self.assertEqual(result['observedNativeRejection']['category'], 'JourneyReleaseAuthenticationError')
 
+    def test_identified_profile_rejection_from_current_native_sdk_log_site(self):
+        # Actual pinned iOS SDK log captured during wrapper qualification.
+        message = ('[Nuxie] [DEBUG] [ProfileService.swift:48] Profile refresh failed: '
+                   '<redacted:error=JourneyReleaseAuthenticationError hmac-sha256:8ae9739d43e4b405>')
+        result = PROBE.verify(ledger(False), message, MANIFEST)
+        self.assertEqual(result['observedNativeRejection']['category'], 'JourneyReleaseAuthenticationError')
+        for invalid in [message.replace('ProfileService.swift', 'OtherService.swift'),
+                        message.replace('JourneyReleaseAuthenticationError', 'URLError')]:
+            with self.subTest(log=invalid), self.assertRaises(ValueError):
+                PROBE.verify(ledger(False), invalid, MANIFEST)
+
     def test_rejection_requires_platform_terminal_site_and_exact_authentication_category(self):
         value = ledger(False)
         for log in ['journey_release.signature.bad_signature', 'JourneyReleaseAuthenticationError',

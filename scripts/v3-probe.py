@@ -58,10 +58,10 @@ def is_json_number(value):
 def terminal_authentication_failure(native_log, platform):
     """Match actual native terminal log sites without exposing their redacted error descriptions."""
     if platform == 'ios':
-        # NuxieSDK/UserTransitionCoordinator interpolate Error; NuxieLogger retains only its concrete category.
-        pattern = (r'\[Nuxie\] \[(?:WARNING|DEBUG)\] '
-                   r'\[(?:NuxieSDK|UserTransitionCoordinator)\.swift:\d+\] '
-                   r'(?:Profile fetch failed|Identity profile refresh failed): '
+        # The native logger preserves the concrete error category at these profile failure sites.
+        pattern = (r'\[Nuxie\] (?:\[WARNING\] \[NuxieSDK\.swift:\d+\] Profile fetch failed|'
+                   r'\[DEBUG\] \[UserTransitionCoordinator\.swift:\d+\] Identity profile refresh failed|'
+                   r'\[DEBUG\] \[ProfileService\.swift:\d+\] Profile refresh failed): '
                    r'<redacted:error=JourneyReleaseAuthenticationError hmac-sha256:[0-9a-f]{16}>')
         category = 'JourneyReleaseAuthenticationError'
     elif platform == 'android':
