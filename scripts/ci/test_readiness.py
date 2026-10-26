@@ -43,7 +43,7 @@ with open(os.environ['COMMAND_LOG'], 'a') as output:
             gradle = path / 'android/gradlew'
             gradle.write_text(script)
             gradle.chmod(0o755)
-        self.environment = dict(os.environ, NUXIE_CI_RUNNER_POLICY_VERSION='1', PATH=str(self.bin) + os.pathsep + os.environ['PATH'], COMMAND_LOG=str(self.log))
+        self.environment = dict(os.environ, _NUXIE_POOL_NESTED='1', NUXIE_CI_RUNNER_POLICY_VERSION='1', PATH=str(self.bin) + os.pathsep + os.environ['PATH'], COMMAND_LOG=str(self.log))
 
     def check(self, selected=None, hosts=False):
         args = [shutil.which('node'), str(self.root / 'scripts' / ('check-hosts.mjs' if hosts else 'check.mjs'))]
@@ -52,6 +52,16 @@ with open(os.environ['COMMAND_LOG'], 'a') as output:
         result = subprocess.run(args, cwd=self.root, env=self.environment, text=True, capture_output=True, timeout=30)
         commands = [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
         return result, commands
+
+    def test_caller_delegates_once_to_the_pool_bridge(self):
+        self.environment.pop('_NUXIE_POOL_NESTED', None)
+        recorder = self.bin / 'python3'
+        shutil.copy2(self.bin / 'pnpm', recorder)
+        result, commands = self.check('android')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(commands), 1)
+        self.assertEqual(commands[0]['command'], 'python3')
+        self.assertEqual(commands[0]['args'], ['scripts/pool.py', 'check', '--platform', 'android'])
 
     def test_portable_cli_never_calls_native_package_or_hosts(self):
         result, commands = self.check('portable')
