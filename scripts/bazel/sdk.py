@@ -29,6 +29,13 @@ def main():
     parser.add_argument('command', choices=['build', 'test', 'typecheck', 'build-native'])
     parser.add_argument('--platform', choices=['portable', 'android', 'ios', 'all'], default='all')
     args = parser.parse_args()
+    sys.path.insert(0, str(ROOT / 'scripts'))
+    from pool import dispatch
+    status = dispatch('sdk', sys.argv[1:])
+    if status is not None:
+        raise SystemExit(status)
+    from pool import prepare_dependencies
+    prepare_dependencies()
     if args.command != 'build-native' and args.platform != 'all':
         parser.error('--platform selects build-native only')
     if args.command == 'build-native':

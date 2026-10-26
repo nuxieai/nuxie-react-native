@@ -30,5 +30,11 @@ export function check(platform = 'all', run = (command, args) => {
 }
 
 if (process.argv[1] && process.argv[1] !== '-' && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  check(selectedPlatform(process.argv.slice(2)));
+  const platform = selectedPlatform(process.argv.slice(2));
+  const result = process.env._NUXIE_POOL_NESTED === '1' ? null : spawnSync('python3', ['scripts/pool.py', 'check', '--platform', platform], { stdio: 'inherit' });
+  if (process.env._NUXIE_POOL_NESTED === '1') check(platform);
+  else {
+    if (result.error) throw result.error;
+    process.exitCode = result.status ?? 1;
+  }
 }
