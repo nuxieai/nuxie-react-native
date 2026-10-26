@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--platform', choices=['android', 'ios', 'all'], default='android')
 parser.add_argument('--configuration', choices=['Debug', 'Release'], default='Debug')
 args = parser.parse_args()
-status = dispatch('prepare-native', sys.argv[1:])
+status = dispatch('prepare-native', sys.argv[1:], selected_platform=args.platform)
 if status is not None: raise SystemExit(status)
 
 

@@ -27,7 +27,7 @@ def non_android_environment():
 def pool_dispatch(args):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from pool import dispatch
-    return dispatch('sdk', sys.argv[1:], command=args.command)
+    return dispatch('sdk', sys.argv[1:], command=args.command, selected_platform=args.platform)
 
 
 def main():
