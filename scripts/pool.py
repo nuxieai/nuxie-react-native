@@ -67,6 +67,13 @@ def dispatch(mode, arguments, *, output=None, command=None, input_files=None, en
     args = list(arguments) if mode == 'sdk' else [mode, *arguments]
     if output is not None and not any(a == '--output' or a.startswith('--output=') for a in args):
         args += ['--output', str(output)]
+    if os.environ.get('NUXIE_NATIVE_PREPARED_ONLY') == '1':
+        input_files = dict(input_files or {})
+        for tool, name in (('android', 'android/maven'), ('xcode', '.native/artifacts/ios')):
+            if tool in requirements:
+                selected = ROOT / name
+                if not (selected / 'sdk-artifacts.json').is_file(): raise ValueError('Missing prepared native SDK receipt: ' + name)
+                input_files[name] = selected
     return module.route(ROOT, args, frontend=frontend, platform=platform,
                         requirements=requirements, outputs=names, input_files=input_files, environment=environment,
                         merge_outputs=[name for name in names if not (SDK == 'react-native' and name == 'dist')])
