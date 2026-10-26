@@ -18,7 +18,7 @@ class PoolRoutingTests(unittest.TestCase):
             command = 'build-native' if pool.SDK in ('react-native', 'flutter') else 'prepare-ios'
             self.assertEqual(pool.selection('sdk', [command, '--platform', 'ios']), ('macos', ['node', 'xcode']))
             command = 'build-native' if pool.SDK in ('react-native', 'flutter') else 'build-android'
-            self.assertEqual(pool.selection('sdk', [command, '--platform', 'android']), ('portable', ['android', 'node']))
+            self.assertEqual(pool.selection('sdk', [command, '--platform', 'android']), ('portable', ['android', 'android-api@37', 'node']))
 
     def test_whole_check_keeps_engine_and_mobile_requirements(self):
         platform, tools = pool.selection('check', [])
@@ -33,7 +33,7 @@ class PoolRoutingTests(unittest.TestCase):
         self.assertIn('xcode', tools)
         self.assertNotIn('android', tools)
         if pool.SDK == 'react-native':
-            self.assertEqual(pool.selection('prepare-native', []), ('portable', ['android', 'node']))
+            self.assertEqual(pool.selection('prepare-native', []), ('portable', ['android', 'android-api@37', 'node']))
 
     def test_parsed_command_controls_platform_when_options_come_first(self):
         if pool.SDK == 'android': return
