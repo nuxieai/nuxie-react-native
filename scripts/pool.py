@@ -78,6 +78,14 @@ def dispatch(mode, arguments, *, output=None, command=None, input_files=None, en
                 selected = ROOT / name
                 if not (selected / 'sdk-artifacts.json').is_file(): raise ValueError('Missing prepared native SDK receipt: ' + name)
                 input_files[name] = selected
+    if mode == 'check':
+        for example, scheme in (('bare', 'NuxieBare'), ('expo', 'NuxieExpoLab')):
+            if 'android' in requirements:
+                for directory in ('outputs', 'reports', 'test-results'):
+                    name = 'examples/' + example + '/android/app/build/' + directory; names[name] = ROOT / name
+            if 'xcode' in requirements:
+                name = 'examples/.build/' + example + '-ios/Build/Products/Debug-iphonesimulator/' + scheme + '.app'
+                names[name] = ROOT / name
     return module.route(ROOT, args, frontend=frontend, platform=platform,
                         requirements=requirements, outputs=names, input_files=input_files, environment=environment,
                         merge_outputs=[name for name in names if not (SDK == 'react-native' and name == 'dist')])
