@@ -42,6 +42,7 @@ def selection(mode, arguments, command=None):
     if (mode == 'gradle' or (mode == 'check' and 'android' in requirements)
             or (SDK == 'android' and mode == 'sdk' and command in ('check', 'lint', 'api-check', 'providers'))):
         requirements.add('java17')
+    if 'android' in requirements: requirements.add('android-api@37')
     if apple: requirements.add('xcode')
     return ('macos' if apple else 'portable'), sorted(requirements)
 
@@ -66,7 +67,8 @@ def dispatch(mode, arguments, *, output=None, command=None, input_files=None, en
     if output is not None and not any(a == '--output' or a.startswith('--output=') for a in args):
         args += ['--output', str(output)]
     return module.route(ROOT, args, frontend=frontend, platform=platform,
-                        requirements=requirements, outputs=names, input_files=input_files, environment=environment)
+                        requirements=requirements, outputs=names, input_files=input_files, environment=environment,
+                        merge_outputs=[name for name in names if not (SDK == 'react-native' and name == 'dist')])
 
 
 def prepare_dependencies():
