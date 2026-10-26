@@ -5,8 +5,6 @@ from pathlib import Path
 import sys
 
 from pool import dispatch
-status = dispatch('prepare-native', sys.argv[1:])
-if status is not None: raise SystemExit(status)
 
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root / 'scripts/bazel'))
@@ -16,6 +14,10 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--platform', choices=['android', 'ios', 'all'], default='android')
 parser.add_argument('--configuration', choices=['Debug', 'Release'], default='Debug')
 args = parser.parse_args()
+status = dispatch('prepare-native', sys.argv[1:])
+if status is not None: raise SystemExit(status)
+
+
 prepare(root, ['ios', 'android'] if args.platform == 'all' else [args.platform], args.configuration,
         android_output=root / 'android/maven')
 print('Pinned native Bazel artifacts and Maven dependency metadata ready.')
