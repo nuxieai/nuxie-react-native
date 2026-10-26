@@ -4,6 +4,10 @@ import argparse
 from pathlib import Path
 import sys
 
+from pool import dispatch
+status = dispatch('prepare-native', sys.argv[1:])
+if status is not None: raise SystemExit(status)
+
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root / 'scripts/bazel'))
 from native_prepare import prepare
