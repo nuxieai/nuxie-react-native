@@ -70,7 +70,7 @@ def dispatch(mode, arguments, *, output=None):
 
 
 def prepare_dependencies():
-    if os.environ.get('_NUXIE_POOL_NESTED') == '1' and os.environ.get('_NUXIE_SDK_DEPS_READY') != '1':
+    if os.environ.get('_NUXIE_SDK_SNAPSHOT') == '1' and os.environ.get('_NUXIE_SDK_DEPS_READY') != '1':
         subprocess.run(['pnpm', '--store-dir', str(ROOT / '.nuxie/pnpm-store'), '--ignore-workspace', 'install', '--frozen-lockfile'], cwd=ROOT, check=True)
         os.environ['_NUXIE_SDK_DEPS_READY'] = '1'
 
@@ -81,16 +81,21 @@ def main():
     if status is not None: return status
     if mode == 'gradle':
         command = [str(ROOT / 'gradlew'), *arguments, '--no-daemon', '--max-workers=' + os.environ.get('NUXIE_BAZEL_CPU', '2')]
-    elif SDK == 'react-native' and mode == 'check':
+    elif SDK == 'react-native' and mode == 'check' and os.environ.get('_NUXIE_SDK_SNAPSHOT') == '1':
         # Dependencies belong to the selected host's disposable snapshot.
         os.environ['_NUXIE_POOL_NESTED'] = '1'
         prepare_dependencies()
         # The public check assumes an already built package and installed
         # example dependencies. Materialize those prerequisites in the snapshot.
         subprocess.run([sys.executable, 'scripts/bazel/sdk.py', 'build'], cwd=ROOT, check=True)
+        selected = arguments[1] if arguments[:1] == ['--platform'] else 'all'
+        if selected != 'portable':
+            subprocess.run([sys.executable, 'scripts/bazel/sdk.py', 'build-native', '--platform', selected], cwd=ROOT, check=True)
         for example in ('bare', 'expo'):
             subprocess.run(['pnpm', '--store-dir', str(ROOT / '.nuxie/pnpm-store'), '--ignore-workspace', 'install', '--frozen-lockfile'],
                            cwd=ROOT / 'examples' / example, check=True)
+        command = ['node', 'scripts/check.mjs', *arguments]
+    elif SDK == 'react-native' and mode == 'check':
         command = ['node', 'scripts/check.mjs', *arguments]
     else:
         command = [sys.executable, 'scripts/' + mode + '.py', *arguments]
