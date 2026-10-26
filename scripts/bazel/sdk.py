@@ -24,18 +24,23 @@ def non_android_environment():
     return dict(os.environ, ANDROID_HOME='', ANDROID_SDK_ROOT='')
 
 
+def pool_dispatch(args):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from pool import dispatch
+    return dispatch('sdk', sys.argv[1:], command=args.command)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=['build', 'test', 'typecheck', 'build-native'])
     parser.add_argument('--platform', choices=['portable', 'android', 'ios', 'all'], default='all')
     args = parser.parse_args()
-    sys.path.insert(0, str(ROOT / 'scripts'))
-    from pool import dispatch
-    status = dispatch('sdk', sys.argv[1:])
+    status = pool_dispatch(args)
     if status is not None:
         raise SystemExit(status)
-    from pool import prepare_dependencies
-    prepare_dependencies()
+    if os.environ.get('_NUXIE_SDK_SNAPSHOT') == '1':
+        from pool import prepare_dependencies
+        prepare_dependencies()
     if args.command != 'build-native' and args.platform != 'all':
         parser.error('--platform selects build-native only')
     if args.command == 'build-native':
