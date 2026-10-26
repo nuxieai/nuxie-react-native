@@ -42,6 +42,17 @@ class PoolRoutingTests(unittest.TestCase):
         self.assertEqual(platform, 'macos')
         self.assertIn('xcode', tools)
 
+    def test_prepared_only_keeps_the_consumer_selected_directories(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home=Path(temporary);root=home/'sdk';root.mkdir()
+            for name in ('android/maven','.native/artifacts/ios'):
+                directory=root/name;directory.mkdir(parents=True);(directory/'sdk-artifacts.json').write_text('{}')
+            helper=home/'.local/share/nuxie-homelab/sdk-task.py';helper.parent.mkdir(parents=True)
+            helper.write_text("def route(root,args,**kwargs):\n assert set(kwargs['input_files']) == {'android/maven','.native/artifacts/ios'}\n return 17\n")
+            with patch.object(pool.Path,'home',return_value=home),patch.object(pool,'ROOT',root),patch.dict(os.environ,
+                    {'_NUXIE_POOL_NESTED':'0','NUXIE_NATIVE_PREPARED_ONLY':'1','NUXIE_HOMELAB':'1','NUXIE_EXECUTION':'pool'}):
+                self.assertEqual(pool.dispatch('check',[]),17)
+
     def test_nested_command_does_not_submit_another_request(self):
         with patch.dict(os.environ, {'_NUXIE_POOL_NESTED':'1'}):
             self.assertIsNone(pool.dispatch('sdk', ['test']))
