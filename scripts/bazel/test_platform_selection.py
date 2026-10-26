@@ -9,6 +9,10 @@ import sdk
 
 
 class PlatformSelectionTests(unittest.TestCase):
+    def setUp(self):
+        guard = patch.object(sdk, 'pool_dispatch', return_value=None)
+        guard.start(); self.addCleanup(guard.stop)
+
     def invoke(self, selected, host='linux'):
         products = {'android': Path('/synthetic/android/sdk-artifacts.json'), 'ios': Path('/synthetic/ios/sdk-artifacts.json')}
         with patch.object(sys, 'argv', ['sdk.py', 'build-native', '--platform', selected]), \
