@@ -45,13 +45,22 @@ with open(os.environ['COMMAND_LOG'], 'a') as output:
             gradle.chmod(0o755)
         self.environment = dict(os.environ, _NUXIE_POOL_NESTED='1', NUXIE_CI_RUNNER_POLICY_VERSION='1', PATH=str(self.bin) + os.pathsep + os.environ['PATH'], COMMAND_LOG=str(self.log))
 
-    def check(self, selected=None, hosts=False):
+    def check(self, selected=None, hosts=False, phase=False):
         args = [shutil.which('node'), str(self.root / 'scripts' / ('check-hosts.mjs' if hosts else 'check.mjs'))]
         if selected is not None:
-            args += ['--platform', selected]
+            args += ['--phase' if phase else '--platform', selected]
         result = subprocess.run(args, cwd=self.root, env=self.environment, text=True, capture_output=True, timeout=30)
         commands = [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
         return result, commands
+
+    def test_android_phase_keeps_consumers_without_repeating_portable_oracles(self):
+        result, commands = self.check('android', phase=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        tasks=[entry['args'][-1] for entry in commands if entry['command']=='pnpm']
+        self.assertNotIn('lint',tasks);self.assertNotIn('test',tasks)
+        self.assertIn('build',tasks);self.assertIn('check:package',tasks)
+        self.assertEqual([entry['command'] for entry in commands].count('gradlew'),2)
+        self.assertFalse(any(entry['command']=='xcodebuild' for entry in commands))
 
     def test_caller_delegates_once_to_the_pool_bridge(self):
         self.environment.pop('_NUXIE_POOL_NESTED', None)
