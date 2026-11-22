@@ -38,6 +38,15 @@ def route(root, arguments, **kwargs):
                 self.assertEqual(POOL.dispatch('check',[]),9)
             self.assertEqual(len(log.read_text().splitlines()),2)
 
+    def test_snapshot_bootstrap_only_prepares_the_selected_native_platform(self):
+        for phase in ('portable', 'android', 'ios'):
+            calls = []
+            with patch.dict(os.environ, {'_NUXIE_SDK_SNAPSHOT':'1'}, clear=True), patch.object(POOL.sys, 'argv', ['pool.py', 'check', '--phase', phase]), patch.object(POOL, 'dispatch', return_value=None), patch.object(POOL, 'prepare_dependencies'), patch.object(POOL.subprocess, 'run', side_effect=lambda args, **kwargs: calls.append(args) or type('Result', (), {'returncode':0})()):
+                self.assertEqual(POOL.main(), 0)
+            native = [args for args in calls if 'build-native' in args]
+            expected = [] if phase == 'portable' else [[POOL.sys.executable, 'scripts/bazel/sdk.py', 'build-native', '--platform', phase]]
+            self.assertEqual(native, expected)
+
     def test_ios_does_not_require_android_and_portable_does_not_require_apple(self):
         platform,tools=POOL.selection('check',['--phase','ios'])
         self.assertEqual(platform,'macos');self.assertIn('xcode',tools);self.assertNotIn('android',tools)

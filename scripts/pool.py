@@ -128,7 +128,7 @@ def main():
         # The public check assumes an already built package and installed
         # example dependencies. Materialize those prerequisites in the snapshot.
         subprocess.run([sys.executable, 'scripts/bazel/sdk.py', 'build'], cwd=ROOT, check=True)
-        selected = arguments[1] if arguments[:1] == ['--platform'] else 'all'
+        selected = arguments[1] if arguments[:1] in (['--platform'], ['--phase']) else 'all'
         if selected != 'portable':
             subprocess.run([sys.executable, 'scripts/bazel/sdk.py', 'build-native', '--platform', selected], cwd=ROOT, check=True)
         for example in ('bare', 'expo'):
